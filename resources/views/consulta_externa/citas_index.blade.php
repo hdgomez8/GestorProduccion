@@ -262,7 +262,10 @@
             $('#estado_cita').css('color', 'black');
             $('#estado_cita').css('font-weight', 'bold');
             $('#estado_cita').css('background-color', '#00ff00');
-        } else if (estadoCitaAntiguo === "Reservada") {
+        } else if (estadoCitaAntiguo === "R") {
+            $('#estado_cita').val("Reservada");
+            $('#estado_cita').css('color', 'black');
+            $('#estado_cita').css('font-weight', 'bold');
             $('#estado_cita').css('background-color', '#ffff00');
         } else if (estadoCitaAntiguo === "Incumplida") {
             $('#estado_cita').css('background-color', '#c00000');
