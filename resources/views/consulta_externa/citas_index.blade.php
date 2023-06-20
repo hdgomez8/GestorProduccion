@@ -14,7 +14,7 @@
                 <div class="card">
                     <div class="card-header card-header-primary">
                         <h4 class="card-title">CITAS</h4>
-                        <p class="card-category">CAMBIAR ESTADOS DE LAS CITAS</p>
+                        <p class="card-category">CAMBIAR ESTADOS DE CITA</p>
                     </div>
                     <form action="{{ route('cambiar_estado_cita') }}" method="post">
                         @csrf
@@ -36,15 +36,15 @@
                             @endif
                             <input type="hidden" name="nombre_formulario" value="CAMBIAR_ESTADO_CITA">
                             <input type="hidden" name="accion" value="EDITAR">
-                            <input type="hidden" id="valor_cita_antes" name="valor_cita_antes">
+                            <input type="hidden" id="valor_cita_antes" name="valor_cita_antes" value="{{ old('valor_cita_antes') }}">
                             <div class="row justify-content-center">
                                 <label for="numero_cita" class="col-form-label" style="color: #333333; font-weight: bold;">NUMERO DE LA CITA</label>
                                 <div class="col-sm-2">
-                                    <input type="text" class="form-control" id="numero_cita" name="numero_cita" placeholder="Ingrese Numero Cita" data-toggle="modal" data-target="#popup_numero_cita" required>
+                                    <input type="text" class="form-control" id="numero_cita" name="numero_cita" value="{{ old('numero_cita') }}" placeholder="Ingrese Numero Cita" data-toggle="modal" data-target="#popup_numero_cita" onclick="this.blur();" onkeydown="return false;" required>
                                 </div>
                                 <label for="estado_cita" class="col-form-label" style="color: #333333; font-weight: bold;">ESTADO DE LA CITA</label>
                                 <div class="col-sm-2">
-                                    <input type="text" class="form-control" id="estado_cita" name="estado_cita" disabled>
+                                    <input type="text" class="form-control" id="estado_cita" name="estado_cita" value="{{ old('valor_cita_antes') }}" disabled>
                                 </div>
                                 <label for="actualizar_estado_cita" class="col-form-label" style="color: #333333; font-weight: bold;">SELECCIONE ESTADO</label>
                                 <div class="col-sm-2">
@@ -54,8 +54,8 @@
                             </div>
                             <div class="row justify-content-center my-2">
                                 <label for="observacion" class="col-form-label text-left" style="color: #333333; font-weight: bold;">OBSERVACIÓN</label>
-                                <div class="col-sm-9">
-                                    <input type="text" class="form-control" id="observacion" name="observacion" maxlength="100" required>
+                                <div class="col-sm-8">
+                                    <input type="text" class="form-control" id="observacion" name="observacion" maxlength="100" value="{{ old('observacion') }}" required>
                                     <p id="mensaje-caracteres" style="color: red; display: none;">Se ha excedido el límite de caracteres.</p>
                                 </div>
                             </div>
@@ -214,11 +214,19 @@
             if (estadoCitaInput.value === 'A') {
                 // Only add "INCUMPLIDA" option when the initial state is "ATENDIDA"
                 const option = document.createElement('option');
-                option.value = 'I';
-                option.text = 'Incumplida';
+                option.value = 'X';
+                option.text = 'Seleccione Estado';
                 actualizarEstadoCitaSelect.add(option);
+                const option1 = document.createElement('option');
+                option1.value = 'I';
+                option1.text = 'Incumplida';
+                actualizarEstadoCitaSelect.add(option1);
             } else {
                 // Add both options "ATENDIDA" and "INCUMPLIDA"
+                const option = document.createElement('option');
+                option.value = 'X';
+                option.text = 'Seleccione Estado';
+                actualizarEstadoCitaSelect.add(option);
                 const option1 = document.createElement('option');
                 option1.value = 'A';
                 option1.text = 'Atendida';
@@ -236,7 +244,31 @@
             });
         });
 
+        // Logica para mostrar los datos segun dato anterior del valor de la cita
+        // Obtén el valor antiguo del campo estado_cita
+        var estadoCitaAntiguo = "{{ old('valor_cita_antes') }}";
 
+        // Asigna el valor antiguo al campo estado_cita
+        $('#estado_cita').val(estadoCitaAntiguo);
+
+        // Aplica la lógica de asignación de valor y color de fondo
+        if (estadoCitaAntiguo === "A") {
+            $('#estado_cita').val("Atendida");
+            $('#estado_cita').css('color', 'white');
+            $('#estado_cita').css('font-weight', 'bold');
+            $('#estado_cita').css('background-color', '#0000c0');
+        } else if (estadoCitaAntiguo === "C") {
+            $('#estado_cita').val("Confirmada");
+            $('#estado_cita').css('color', 'black');
+            $('#estado_cita').css('font-weight', 'bold');
+            $('#estado_cita').css('background-color', '#00ff00');
+        } else if (estadoCitaAntiguo === "Reservada") {
+            $('#estado_cita').css('background-color', '#ffff00');
+        } else if (estadoCitaAntiguo === "Incumplida") {
+            $('#estado_cita').css('background-color', '#c00000');
+        } else if (estadoCitaAntiguo === "Facturada") {
+            $('#estado_cita').css('background-color', '#008080');
+        }
     });
 </script>
 

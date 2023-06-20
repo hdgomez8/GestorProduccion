@@ -127,6 +127,23 @@ class ConsultaExternaController extends Controller
         // dd($request);
         // Realiza la actualización en la base de datos
         try {
+
+            $messages = [
+                'observacion.required' => 'El Tipo de Documento es obligatorio.',
+                'observacion.min' => 'La observación debe tener al menos 10 caracteres.',
+                'actualizar_estado_cita.not_in' => 'Seleccione estado.',
+            ];
+
+            $validator = Validator::make($request->all(), [
+                'observacion' => ['required', 'string', 'min:10', 'max:100'],
+                // Agrega aquí las reglas de validación para los demás campos
+                'actualizar_estado_cita' => 'required|not_in:X',
+            ], $messages);
+
+            if ($validator->fails()) {
+                return redirect()->back()->withErrors($validator)->withInput();
+            }
+
             $numero_cita = trim($request->get('numero_cita'));
             $valor_cita_antes = trim($request->get('valor_cita_antes'));
             $actualizar_estado_cita = trim($request->get('actualizar_estado_cita'));
@@ -156,7 +173,7 @@ class ConsultaExternaController extends Controller
                 $sqlLog = " INSERT INTO COL_LOG ([FOR_ID],[USUARIO_ID], [EVE_ID], [LOG_DATO_INFO], [LOG_VLR_ANTERIOR], [LOG_VLR_NUEVO], [LOG_OBSERVACIONES], [LOG_FEC_HORA], [LOG_NOMBRE_EQUIPO], [LOG_IP_EQUIPO], [LOG_MAC_EQUIPO]) 
                 VALUES ('$id_formulario','$id_usuario', '$id_evento', 'NUMERO_CITA-$numero_cita', 'CitEstP-$valor_cita_antes', 'CitEstP-$actualizar_estado_cita', '$observacion', GETDATE(), '$hostname', '$ipCliente', '$macAddress')";
                 $Log = DB::connection('sqlsrv')->insert($sqlLog);
-                return Redirect::back()->with('success', 'Actualización exitosa');
+                return Redirect::back()->with('success', 'Cambio de estado exitoso');
             } else {
                 // No se encontró el registro
                 return Redirect::back()->with('error', 'Registro no encontrado');
@@ -167,6 +184,6 @@ class ConsultaExternaController extends Controller
             return response()->json(['error' => 'Error en la actualización'], 500);
         }
 
-        return view('consulta_externa.folio_index');
+        return view('consulta_externa.citas_index');
     }
 }
