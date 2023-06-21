@@ -59,8 +59,8 @@ class Reportes extends Model
         LEFT OUTER JOIN MAEDIA ON INGRESOS.IngSalDx = MAEDIA.DMCodi
         WHERE MAEATE.MAESTF <> '1' 
         -- and (MAEATE.MATipDoc = 1) 
-        AND (MAEATE.MAFchI >= '$fechaInicio'+' '+'00:00:00')
-        AND (MAEATE.MAFchI <= '$fechaFin'+' '+'23:59:59')  AND (MAEATE.MPMeNi IN ('$nombreCapita'))
+        AND (MAEATE.FacFch >= '$fechaInicio'+' '+'00:00:00')
+        AND (MAEATE.FacFch <= '$fechaFin'+' '+'23:59:59')  AND (MAEATE.MPMeNi IN ('$nombreCapita'))
         AND (MAEATE2.MaEsAnuP = 'N') AND (MAEATE2.MPInte * MAEATE2.MaCanPr > 0) AND maeate.scccod = '01'
         AND maeate2.maempcod = '01' AND maeate2.prcodi like '890%' and maeate2.fcptpotrn = 'F' order by maeate.mpnfac";
 
@@ -96,8 +96,8 @@ class Reportes extends Model
         'VLR CONTRATO' AS VLR_NETO_PAGAR 
         from empresa,MAEATE 
         WHERE EMPRESA.EMPCOD = '01' AND MAEATE.MAESTF <> '1'
-        AND (maeate.MATipDoc = 1) AND (maeate.MAFchI >= '$fechaInicio'+' '+'00:00:00')
-        AND (maeate.MAFchI <= '$fechaFin'+' '+'23:59:59') AND (maeate.MPMeNi IN('$nombreCapita')) ORDER BY 2";
+        AND (maeate.MATipDoc = 1) AND (maeate.FacFch >= '$fechaInicio'+' '+'00:00:00')
+        AND (maeate.FacFch <= '$fechaFin'+' '+'23:59:59') AND (maeate.MPMeNi IN('$nombreCapita')) ORDER BY 2";
 
         return $data1 = DB::connection('sqlsrv2')->select($sql);
     }
@@ -115,7 +115,7 @@ class Reportes extends Model
         maeate.mptdoc AS TIPO_DOCUMENTO,
         maeate.mpcedu AS DOCUMENTO,
         maeate.MAViaI AS VIA_INGRESO,
-        CONVERT(VARCHAR(10), MAEATE.MAFCHI, 103) AS FECHA_INGRESO,
+        CONVERT(VARCHAR(10), MAEATE.MAFchI, 103) AS FECHA_INGRESO,
         CONVERT(varchar(5), MAEATE.MAHORI, 108) AS HORA_ING,
         MAEATE.MPNUMA AS AUTORIZACION,
         CASE WHEN ingresos.INGCAUE = '0' THEN '13' ELSE CAST(ingresos.INGCAUE AS smallint) END AS CAUSA_EXTERNA,
@@ -132,8 +132,8 @@ class Reportes extends Model
         * 
         FROM MAEATE,INGRESOS,CAPBAS
         WHERE MPMeNi IN('$nombreCapita') 
-        AND (maeate.MAFchI >= '$fechaInicio'+' '+'00:00:00') 
-        AND (maeate.MAFchI <= '$fechaFin'+' '+'23:59:59')
+        AND (maeate.FacFch >= '$fechaInicio'+' '+'00:00:00') 
+        AND (maeate.FacFch <= '$fechaFin'+' '+'23:59:59')
         AND maeate.mactving=ingresos.ingcsc 
         and maeate.mpnfac=ingresos.ingfac 
         and maeate.mpcedu=ingresos.mpcedu 
@@ -181,8 +181,8 @@ class Reportes extends Model
         LEFT OUTER JOIN FRMFRMC ON MAESUMN.MSFORM = frMFRMC.FrmCod
         LEFT OUTER JOIN MAECONC ON maesumn.CncCd = maeconc.CncCd
         LEFT OUTER JOIN UNDMEDI ON maesum1.msundcom = undmedi.UnMdCod
-        WHERE MAEATE.MAESTF <> '1' and (MAEATE.MATipDoc = 1) AND (MAEATE.MAFchI >= '$fechaInicio'+' '+'00:00:00')
-            AND (MAEATE.MAFchI <= '$fechaFin'+' '+'23:59:59') AND (MAEATE.MPMeNi IN ('$nombreCapita'))
+        WHERE MAEATE.MAESTF <> '1' and (MAEATE.MATipDoc = 1) AND (MAEATE.FacFch >= '$fechaInicio'+' '+'00:00:00')
+            AND (MAEATE.FacFch <= '$fechaFin'+' '+'23:59:59') AND (MAEATE.MPMeNi IN ('$nombreCapita'))
             AND (MAEATE3.MAVaTS > 0) and maeate3.maesanus = 'N' AND maeate3.fcstpotrn = 'F' 
             and (MAESUM1.MsTipo <> 'O') AND (MAESUM1.MsCtDE1 IN ('01', '02', '03', '04'))
             AND (MAEATE3.FcSTpoTrn = 'F') ";
@@ -215,8 +215,8 @@ class Reportes extends Model
         '1' AS VIA_ACTO_QX,
         FORMAT((MAEATE2.MPINTE * maeate2.macanpr),'###############') AS VLR_PROCEDIMIENTO
         FROM MAEATE,maeate2,maepro WHERE MAEATE.MAESTF <> '1' and (maeate.MATipDoc = 1)
-        AND (maeate.MAFchI >= '$fechaInicio'+' '+'00:00:00')
-        AND (maeate.MAFchI <= '$fechaFin'+' '+'23:59:59')
+        AND (maeate.FacFch >= '$fechaInicio'+' '+'00:00:00')
+        AND (maeate.FacFch <= '$fechaFin'+' '+'23:59:59')
         AND (maeate.MPMeNi IN('$nombreCapita')) and maeate.mpnfac = maeate2.mpnfac
         and maeate.matipdoc = maeate2.matipdoc and maeate2.prcodi = maepro.prcodi
         and maeate2.MaEsAnuP = 'N' and maeate2.matipP in (1, 2, 3, 4, 5) and (MAEATE2.MPINTE * maeate2.macanpr > 0)
@@ -248,8 +248,8 @@ class Reportes extends Model
         FORMAT((MAEATE2.MPINTE * maeate2.macanpr),'###############') AS VALOR_TOTAL
         FROM MAEATE,maeate2,maepro 
         WHERE  MAEATE.MAESTF <> '1'  and (maeate.MATipDoc = 1)
-        AND (maeate.MAFchI >=  '$fechaInicio'+' '+'00:00:00') 
-        AND (maeate.MAFchI <= '$fechaFin'+' '+'23:59:59')
+        AND (maeate.FacFch >=  '$fechaInicio'+' '+'00:00:00') 
+        AND (maeate.FacFch <= '$fechaFin'+' '+'23:59:59')
         and (maeate.MPMeNi IN('$nombreCapita')) 
         AND maeate2.prcodi NOT like '890%'
         and (MAEATE2.MPINTE * maeate2.macanpr > 0)  
@@ -284,8 +284,8 @@ class Reportes extends Model
         LEFT OUTER JOIN MAECONC ON maesumn.CncCd = maeconc.CncCd
         LEFT OUTER JOIN UNDMEDI ON maesum1.msundcom = undmedi.UnMdCod
         WHERE MAEATE.MAESTF <> '1' and (MAEATE.MATipDoc = 1) 
-        AND (MAEATE.MAFchI >= '$fechaInicio'+' '+'00:00:00')
-        AND (MAEATE.MAFchI <= '$fechaFin'+' '+'23:59:59') 
+        AND (MAEATE.FacFch >= '$fechaInicio'+' '+'00:00:00')
+        AND (MAEATE.FacFch <= '$fechaFin'+' '+'23:59:59') 
         AND (MAEATE.MPMeNi IN ('$nombreCapita'))
         AND (MAEATE3.MAVaTS > 0) 
         and maeate3.maesanus = 'N' 
@@ -311,7 +311,7 @@ class Reportes extends Model
     //     '470010047601' AS PRESTADOR,
     //     maeate.mptdoc AS TIPO_DOCUMENTO,
     //     maeate.mpcedu AS DOCUMENTO,
-    //     CONVERT(VARCHAR(10), maeate.MAFchI, 103) as FEC_INGRESO,
+    //     CONVERT(VARCHAR(10), maeate.FacFch, 103) as FEC_INGRESO,
     //     ltrim(DATEPART(HOUR, ingresos.ingfehatu)) + ':' + ltrim(DATEPART(MINUTE, ingresos.ingfehatu)) AS HORA_INGRESO,
     //     MAEATE.MPNUMA AS AUTORIZACION,
     //     ingresos.INGCAUE as CAUSA_EXTERNA,
@@ -324,8 +324,8 @@ class Reportes extends Model
     //     INGRESOS.IngCauM AS CAUSA_MUERTE,
     //     CONVERT(VARCHAR(10), INGRESOS.IngFecEgr, 103) AS FEC_EGRESO,ltrim(DATEPART(HOUR, ingresos.IngFecEgr)) + ':' + ltrim(DATEPART(MINUTE, ingresos.IngFecEgr)) AS HOR_EGRESO
     //     FROM MAEATE,INGRESOS,MAEATE2
-    //     WHERE MAEATE.MAESTF <> '1' and (maeate.MATipDoc = 1) AND (maeate.MAFchI >= '$fechaInicio' +' '+'00:00:00')
-    //     AND ( maeate.MAFchI <= '$fechaFin'+' '+'23:59:59') AND (maeate.MPMeNi IN('$nombreCapita'))
+    //     WHERE MAEATE.MAESTF <> '1' and (maeate.MATipDoc = 1) AND (maeate.FacFch >= '$fechaInicio' +' '+'00:00:00')
+    //     AND ( maeate.FacFch <= '$fechaFin'+' '+'23:59:59') AND (maeate.MPMeNi IN('$nombreCapita'))
     //     AND maeate.mactving = ingresos.ingcsc and maeate.mpnfac = ingresos.ingfac and maeate.mpcedu = ingresos.mpcedu
     //     and maeate.mptdoc = ingresos.mptdoc AND maeate2.fcptpotrn = 'F' and maeate.mpnfac = maeate2.mpnfac and maeate.matipdoc = maeate2.matipdoc
     //     and maeate2.MaEsAnuP = 'N' and (maeate2.prcodi in('890701','890702')) ORDER BY  maeate.mpcedu";
@@ -365,7 +365,7 @@ class Reportes extends Model
         -- MAEATE.MPCEDU IN('57116031') AND 
         maeate.MATipDoc = 1 AND MAEATE.MAESTF <> '1'  AND maeate.scccod = '01' 
         AND maeate.MPMeNi IN ('$nombreCapita')
-        AND (maeate.MAFchI >= '$fechaInicio'+' '+'00:00:00') AND (maeate.MAFchI <= '$fechaFin'+' '+'23:59:59') 
+        AND (maeate.FacFch >= '$fechaInicio'+' '+'00:00:00') AND (maeate.FacFch <= '$fechaFin'+' '+'23:59:59') 
         order by 3
         ";
 
@@ -411,8 +411,8 @@ class Reportes extends Model
         AND MAEATE.MPCedu = INGRESOS.MPCedu AND MAEATE.MPTDoc = INGRESOS.MPTDoc 
         LEFT OUTER JOIN MAEPRO ON MAEATE2.PRCODI = MAEPRO.PRCODI
         LEFT OUTER JOIN MAEDIA ON MAEATE.MADI1S = MAEDIA.DMCodi 
-        WHERE MAEATE.MAESTF <> '1' and (MAEATE.MATipDoc = 1) AND (MAEATE.MAFchI >= '$fechaInicio' +' '+'00:00:00')
-        AND ( MAEATE.MAFchI <= '$fechaFin' +' '+'23:59:59') AND (MAEATE.MPMeNi IN ('$nombreCapita')) AND (MAEATE2.MaEsAnuP = 'N')
+        WHERE MAEATE.MAESTF <> '1' and (MAEATE.MATipDoc = 1) AND (MAEATE.FacFch >= '$fechaInicio' +' '+'00:00:00')
+        AND ( MAEATE.FacFch <= '$fechaFin' +' '+'23:59:59') AND (MAEATE.MPMeNi IN ('$nombreCapita')) AND (MAEATE2.MaEsAnuP = 'N')
         AND (MAEATE2.MATipP IN (1, 2, 3, 4, 5)) AND (MAEATE2.MPInte * MAEATE2.MaCanPr > 0) and maeate2.fcptpotrn = 'F'
         UNION ALL ----PUESTO MIGUE
         
@@ -436,8 +436,8 @@ class Reportes extends Model
         LEFT OUTER JOIN MAEDIA ON INGRESOS.IngSalDx = MAEDIA.DMCodi
         LEFT OUTER JOIN MAESUMN ON MAESUMN.MSCodi = MAESUM1.MSCodi
         AND MAESUMN.MSPrAc = MAESUM1.MSPrAc AND MAESUMN.CncCd = MAESUM1.CncCd AND MAESUMN.MSForm = MAESUM1.MSForm
-        WHERE MAEATE.MAESTF <> '1' and (MAEATE.MATipDoc = 1)  AND (MAEATE.MAFchI >= '$fechaInicio' +' '+'00:00:00')
-        AND (MAEATE.MAFchI <= '$fechaFin' +' '+'23:59:59') AND (MAEATE.MPMeNi IN ('$nombreCapita')) AND (MAESUMN.MSPOSX IN ('0', '1', '9'))
+        WHERE MAEATE.MAESTF <> '1' and (MAEATE.MATipDoc = 1)  AND (MAEATE.FacFch >= '$fechaInicio' +' '+'00:00:00')
+        AND (MAEATE.FacFch <= '$fechaFin' +' '+'23:59:59') AND (MAEATE.MPMeNi IN ('$nombreCapita')) AND (MAESUMN.MSPOSX IN ('0', '1', '9'))
         AND (MAEATE3.MAVaTS > 0) and maeate3.maesanus = 'N' and maeate3.fcstpotrn = 'F' AND (MAESUM1.MsTipo <> 'O')
         --ORDER BY MAEATE.MPNFac
         UNION ALL ----PUESTO MIGUE
@@ -447,7 +447,7 @@ class Reportes extends Model
         SELECT maeate.mpnfac,'$numeroFactura' AS FACTURA,maeate.MPMeNi AS CONTRATO,MAEEMP.MENOMB AS NOMBRE_CONTRATO,'819002176' AS NIT_IPS,
         maeate.mptdoc AS TIPO_ID,maeate.mpcedu AS IDENTIFICACION,CAPBAS.MPAPE1 AS PRIMER_APELLIDO,CAPBAS.MPAPE2 AS SEGUNDO_APELLIDO,
         CAPBAS.MPNOM1 AS PRIMER_NOMBRE,CAPBAS.MPNOM2 AS SEGUNDO_NOMBRE,CAPBAS.MPSEXO AS SEXO,DATEDIFF(YEAR, MPFCHN, GETDATE()) as EDAD,
-        CONVERT(VARCHAR(10), MAEATE.MAFCHI, 103) AS FECHA_INGRESO,CONVERT(VARCHAR(10), MAEATE.MAFCHE, 103) AS FECHA_EGRESO,
+        CONVERT(VARCHAR(10), MAEATE.MAFchI, 103) AS FECHA_INGRESO,CONVERT(VARCHAR(10), MAEATE.MAFCHE, 103) AS FECHA_EGRESO,
         INGRESOS.INGSALDX as DX_EGRESO,MAEDIA.DMNOMB AS DIAGNOSTICO_DETALLE,maeate2.prcodi AS CUPS,MAEPRO.PRNOMB AS DETALLE_CODIGO,
         maeate2.macanpr AS CANTIDAD,FORMAT(MAEATE2.MPINTE, '###############') AS VALOR_UNITARIO,FORMAT((MAEATE2.MPINTE * maeate2.macanpr),'###############' ) AS VALOR_TOTAL,
         0 AS ABONO,FORMAT((MAEATE2.MPINTE * maeate2.macanpr),'###############') AS TOTAL_NETO
@@ -460,8 +460,8 @@ class Reportes extends Model
         AND MAEATE.MPCedu = INGRESOS.MPCedu AND MAEATE.MPTDoc = INGRESOS.MPTDoc
         LEFT OUTER JOIN MAEPRO ON MAEATE2.PRCODI = MAEPRO.PRCODI
         LEFT OUTER JOIN MAEDIA ON INGRESOS.IngSalDx = MAEDIA.DMCodi
-        WHERE MAEATE.MAESTF <> '1' and (MAEATE.MATipDoc = 1) AND (MAEATE.MAFchI >= '$fechaInicio' +' '+'00:00:00')
-        AND (MAEATE.MAFchI <= '$fechaFin' +' '+'23:59:59') AND (MAEATE.MPMeNi IN ('$nombreCapita'))
+        WHERE MAEATE.MAESTF <> '1' and (MAEATE.MATipDoc = 1) AND (MAEATE.FacFch >= '$fechaInicio' +' '+'00:00:00')
+        AND (MAEATE.FacFch <= '$fechaFin' +' '+'23:59:59') AND (MAEATE.MPMeNi IN ('$nombreCapita'))
         AND maeate2.prcodi NOT like '890%' AND (MAEATE2.MaEsAnuP = 'N') AND (MAEATE2.MATipP IN (6, 7, 9))
         AND (MAEATE2.MPInte * MAEATE2.MaCanPr > 0) and maeate2.fcptpotrn = 'F' 
         UNION ALL
@@ -492,8 +492,8 @@ class Reportes extends Model
         LEFT OUTER JOIN FRMFRMC ON MAESUMN.MSFORM = frMFRMC.FrmCod
         LEFT OUTER JOIN MAECONC ON maesumn.CncCd = maeconc.CncCd
         LEFT OUTER JOIN UNDMEDI ON maesum1.msundcom = undmedi.UnMdCod
-        WHERE MAEATE.MAESTF <> '1' and (MAEATE.MATipDoc = 1) AND (MAEATE.MAFchI >= '$fechaInicio' +' '+'00:00:00' )
-        AND (MAEATE.MAFchI <= '$fechaFin' +' '+'23:59:59') AND (MAEATE.MPMeNi IN ('$nombreCapita'))
+        WHERE MAEATE.MAESTF <> '1' and (MAEATE.MATipDoc = 1) AND (MAEATE.FacFch >= '$fechaInicio' +' '+'00:00:00' )
+        AND (MAEATE.FacFch <= '$fechaFin' +' '+'23:59:59') AND (MAEATE.MPMeNi IN ('$nombreCapita'))
         AND (MAEATE3.MAVaTS > 0) and maeate3.maesanus = 'N' AND (MAESUM1.MsTipo = 'O') AND (MAESUM1.MsCtDE1 IN ('01', '02', '03', '04'))
         AND (MAEATE3.FcSTpoTrn = 'F') --AND (MAESUM1.MsFactur = 'S') 
         
@@ -515,8 +515,8 @@ class Reportes extends Model
         AND MAEATE.MPCedu = INGRESOS.MPCedu AND MAEATE.MPTDoc = INGRESOS.MPTDoc 
         LEFT OUTER JOIN MAEPRO ON MAEATE2.PRCODI = MAEPRO.PRCODI AND MAEATE2.PRCODI = MAEPRO.PRCODI
         LEFT OUTER JOIN MAEDIA ON INGRESOS.IngSalDx = MAEDIA.DMCodi 
-        WHERE MAEATE.MAESTF <> '1' and (MAEATE.MATipDoc = 1) AND (MAEATE.MAFchI >= '$fechaInicio' +' '+'00:00:00' )
-        AND (MAEATE.MAFchI <= '$fechaFin' +' '+'23:59:59') AND (MAEATE.MPMeNi IN ('$nombreCapita')) AND (MAEATE2.MaEsAnuP = 'N')
+        WHERE MAEATE.MAESTF <> '1' and (MAEATE.MATipDoc = 1) AND (MAEATE.FacFch >= '$fechaInicio' +' '+'00:00:00' )
+        AND (MAEATE.FacFch <= '$fechaFin' +' '+'23:59:59') AND (MAEATE.MPMeNi IN ('$nombreCapita')) AND (MAEATE2.MaEsAnuP = 'N')
         AND (MAEATE2.MPInte * MAEATE2.MaCanPr > 0) AND maeate.scccod = '01' AND maeate2.maempcod = '01' AND maeate2.prcodi like '890%'
         and maeate2.fcptpotrn = 'F' order by   maeate.mpnfac
         
@@ -525,8 +525,8 @@ class Reportes extends Model
             -- Ordenes de servicio en el periodo  ==============  Se compara con el Reporte Facturación - Ordenes de servicio
             -- Resumen de facturacion por orden de S.  ========= y se dejan solo los registros con ingresos del periodo.
         select maeate.mpnfac AS ORDEN_SERVICIO,    FORMAT(MAEATE.MATOTF, '##########') AS TOTAL_F 
-        from MAEATE WHERE MAEATE.MAESTF <> '1' AND (maeate.MATipDoc = 1)  AND ( maeate.MAFchI >= '$fechaInicio' +' '+'00:00:00')
-        AND (maeate.MAFchI <= '$fechaFin' +' '+'23:59:59') AND (maeate.MPMeNi IN('$nombreCapita')) ORDER BY 1
+        from MAEATE WHERE MAEATE.MAESTF <> '1' AND (maeate.MATipDoc = 1)  AND ( maeate.FacFch >= '$fechaInicio' +' '+'00:00:00')
+        AND (maeate.FacFch <= '$fechaFin' +' '+'23:59:59') AND (maeate.MPMeNi IN('$nombreCapita')) ORDER BY 1
         
         
            -- Detalle 
@@ -534,8 +534,8 @@ class Reportes extends Model
         MAEPRO.PRNOMB AS NOMBRE,FORMAT((MAEATE2.MPINTE * maeate2.macanpr), '##########') AS VALOR
         FROM 
         MAEATE,maeate2,maepro 
-        WHERE MAEATE.MAESTF <> '1' and (maeate.MATipDoc = 1) AND (maeate.MAFchI >= '$fechaInicio' +' '+'00:00:00') 
-        AND (maeate.MAFchI <= '$fechaFin' +' '+'23:59:59') AND (maeate.MPMeNi IN('$nombreCapita'))
+        WHERE MAEATE.MAESTF <> '1' and (maeate.MATipDoc = 1) AND (maeate.FacFch >= '$fechaInicio' +' '+'00:00:00') 
+        AND (maeate.FacFch <= '$fechaFin' +' '+'23:59:59') AND (maeate.MPMeNi IN('$nombreCapita'))
         and maeate.mpnfac = maeate2.mpnfac and maeate.matipdoc = maeate2.matipdoc and maeate2.prcodi = maepro.prcodi
         and maeate2.MaEsAnuP = 'N' and (MAEATE2.MPINTE * maeate2.macanpr > 0) and maeate2.fcptpotrn = 'F'
         UNION ALL
@@ -544,8 +544,8 @@ class Reportes extends Model
         MAEATE,
         maeate3,
         maesum1
-        WHERE  MAEATE.MAESTF <> '1' and (maeate.MATipDoc = 1)  AND (maeate.MAFchI >= '$fechaInicio' +' '+'00:00:00')
-            AND (maeate.MAFchI <= '$fechaFin' +' '+'23:59:59' )  AND maeate.MPMeNi IN('$nombreCapita') and maeate.mpnfac = maeate3.mpnfac
+        WHERE  MAEATE.MAESTF <> '1' and (maeate.MATipDoc = 1)  AND (maeate.FacFch >= '$fechaInicio' +' '+'00:00:00')
+            AND (maeate.FacFch <= '$fechaFin' +' '+'23:59:59' )  AND maeate.MPMeNi IN('$nombreCapita') and maeate.mpnfac = maeate3.mpnfac
             and maeate.matipdoc = maeate3.matipdoc AND maeate3.msreso = maesum1.msreso and maeate3.maesanus = 'N' and MAEATE3.MAVATS > 0
             and maeate3.fcstpotrn = 'F'";
 
