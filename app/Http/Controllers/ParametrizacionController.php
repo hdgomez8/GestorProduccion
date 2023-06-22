@@ -104,7 +104,7 @@ class ParametrizacionController extends Controller
 
         $hostname = gethostbyaddr($_SERVER['REMOTE_ADDR']);
 
-        $macAddress = HelperController::obtenerMacEquipo();
+        // $macAddress = HelperController::obtenerMacEquipo();
 
         $ipCliente = $_SERVER['REMOTE_ADDR'];
 
@@ -121,7 +121,7 @@ class ParametrizacionController extends Controller
                 // Actualización exitosa
 
                 $sqlLog = " INSERT INTO COL_LOG ([FOR_ID],[USUARIO_ID], [EVE_ID], [LOG_DATO_INFO], [LOG_VLR_ANTERIOR], [LOG_VLR_NUEVO], [LOG_OBSERVACIONES], [LOG_FEC_HORA], [LOG_NOMBRE_EQUIPO], [LOG_IP_EQUIPO], [LOG_MAC_EQUIPO]) 
-                VALUES ('$id_formulario','$id_usuario', '$id_evento', 'PORTAFOLIO-$codigo_portafolio/CODIGO-$codigo_procedimiento', 'PTValLib-$valor_variable_antes', 'PTValLib-$actualizar_valor_variable', '$observacion', GETDATE(), '$hostname', '$ipCliente', '$macAddress')";
+                VALUES ('$id_formulario','$id_usuario', '$id_evento', 'PORTAFOLIO-$codigo_portafolio/CODIGO-$codigo_procedimiento', 'PTValLib-$valor_variable_antes', 'PTValLib-$actualizar_valor_variable', '$observacion', GETDATE(), '$hostname', '$ipCliente')";
                 $Log = DB::connection('sqlsrv')->insert($sqlLog);
                 return Redirect::back()->with('success', 'Actualización exitosa');
             } else {

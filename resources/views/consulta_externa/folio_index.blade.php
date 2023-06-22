@@ -1,4 +1,4 @@
-@extends('layouts.main', ['activePage' => 'Folios', 'titlePage' => 'Folios'])
+@extends('layouts.main', ['activePage' => 'FoliosColsalud', 'titlePage' => 'Folios'])
 @section('content')
 
 <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">

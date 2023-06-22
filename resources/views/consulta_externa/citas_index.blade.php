@@ -1,4 +1,4 @@
-@extends('layouts.main', ['activePage' => 'Citas', 'titlePage' => 'Citas'])
+@extends('layouts.main', ['activePage' => 'CitasColsalud', 'titlePage' => 'Citas'])
 @section('content')
 
 <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
@@ -48,7 +48,7 @@
                                 </div>
                                 <label for="actualizar_estado_cita" class="col-form-label" style="color: #333333; font-weight: bold;">SELECCIONE ESTADO</label>
                                 <div class="col-sm-2">
-                                    <select class="form-control" name="actualizar_estado_cita" id="actualizar_estado_cita">
+                                    <select class="form-control" name="actualizar_estado_cita" id="actualizar_estado_cita" required>
                                     </select>
                                 </div>
                             </div>
@@ -176,6 +176,9 @@
             if (estadoCita === "Confirmada") {
                 $('#valor_cita_antes').val("C");
             }
+            if (estadoCita === "Reservada") {
+                $('#valor_cita_antes').val("R");
+            }
 
 
             var backgroundColor;
@@ -214,19 +217,36 @@
             if (estadoCitaInput.value === 'A') {
                 // Only add "INCUMPLIDA" option when the initial state is "ATENDIDA"
                 const option = document.createElement('option');
-                option.value = 'X';
+                option.value = '';
                 option.text = 'Seleccione Estado';
                 actualizarEstadoCitaSelect.add(option);
                 const option1 = document.createElement('option');
                 option1.value = 'I';
                 option1.text = 'Incumplida';
                 actualizarEstadoCitaSelect.add(option1);
-            } else {
+            } else if (estadoCitaInput.value === 'C') {
                 // Add both options "ATENDIDA" and "INCUMPLIDA"
                 const option = document.createElement('option');
-                option.value = 'X';
+                option.value = '';
                 option.text = 'Seleccione Estado';
-                actualizarEstadoCitaSelect.add(option);
+                actualizarEstadoCitaSelect.add(option); 
+
+                const option1 = document.createElement('option');
+                option1.value = 'A';
+                option1.text = 'Atendida';
+                actualizarEstadoCitaSelect.add(option1);
+
+                const option2 = document.createElement('option');
+                option2.value = 'I';
+                option2.text = 'Incumplida';
+                actualizarEstadoCitaSelect.add(option2);
+            } else if (estadoCitaInput.value === 'R') {
+                // Add both options "ATENDIDA" and "INCUMPLIDA"
+                const option = document.createElement('option');
+                option.value = '';
+                option.text = 'Seleccione Estado';
+                actualizarEstadoCitaSelect.add(option); 
+
                 const option1 = document.createElement('option');
                 option1.value = 'A';
                 option1.text = 'Atendida';
@@ -241,6 +261,7 @@
             // Update the input field and select menu when the selected option changes
             actualizarEstadoCitaSelect.addEventListener('change', function() {
                 estadoCitaInput.value = this.value;
+                console.log(estadoCitaInput.value);
             });
         });
 
@@ -267,10 +288,6 @@
             $('#estado_cita').css('color', 'black');
             $('#estado_cita').css('font-weight', 'bold');
             $('#estado_cita').css('background-color', '#ffff00');
-        } else if (estadoCitaAntiguo === "Incumplida") {
-            $('#estado_cita').css('background-color', '#c00000');
-        } else if (estadoCitaAntiguo === "Facturada") {
-            $('#estado_cita').css('background-color', '#008080');
         }
     });
 </script>

@@ -68,12 +68,19 @@ class ConsultaExternaController extends Controller
             $id_evento = COL_EVENTO::getIdEvento($accion);
 
             $hostname = gethostbyaddr($_SERVER['REMOTE_ADDR']);
-            $macAddress = HelperController::obtenerMacEquipo();
+            // $macAddress = HelperController::obtenerMacEquipo();
             $ipCliente = $_SERVER['REMOTE_ADDR'];
 
             // Ejecuta la consulta SQL para actualizar el registro
             $sqlVerificarDatos = "SELECT * from HCCOM1 where HISTipDoc = '$tipoDocumento' and hisckey = '$numeroDocumento'";
             $affectedRowsConsulta = DB::connection('sqlsrv2')->select($sqlVerificarDatos);
+
+            $sqlVerificarSiExistenFoliosAbiertos = "SELECT * from HCCOM1 where HISTipDoc = '$tipoDocumento' and hisckey = '$numeroDocumento' and HISCCIE='0' ";
+            $affectedRowsConsultaAbiertos = DB::connection('sqlsrv2')->select($sqlVerificarSiExistenFoliosAbiertos);
+
+            if (empty($affectedRowsConsultaAbiertos)) {
+                return redirect()->back()->withErrors(['error' => 'No existen folios abiertos de ese paciente.'])->withInput();
+            }
 
             if (empty($affectedRowsConsulta)) {
                 return redirect()->back()->withErrors(['error' => 'No se encontraron resultados para la busqueda.'])->withInput();
@@ -87,7 +94,7 @@ class ConsultaExternaController extends Controller
                 // Actualización exitosa
 
                 $sqlLog = " INSERT INTO COL_LOG ([FOR_ID],[USUARIO_ID], [EVE_ID], [LOG_DATO_INFO], [LOG_VLR_ANTERIOR], [LOG_VLR_NUEVO], [LOG_FEC_HORA], [LOG_NOMBRE_EQUIPO], [LOG_IP_EQUIPO], [LOG_MAC_EQUIPO]) 
-                VALUES ('$id_formulario','$id_usuario', '$id_evento', 'TIPO_DOCUMENTO-$tipoDocumento/NUMERO_DOCUMENTO-$numeroDocumento', 'HISCCIE-0', 'HISCCIE-1', GETDATE(), '$hostname', '$ipCliente', '$macAddress')";
+                VALUES ('$id_formulario','$id_usuario', '$id_evento', 'TIPO_DOCUMENTO-$tipoDocumento/NUMERO_DOCUMENTO-$numeroDocumento', 'HISCCIE-0', 'HISCCIE-1', GETDATE(), '$hostname', '$ipCliente')";
                 $Log = DB::connection('sqlsrv')->insert($sqlLog);
                 return Redirect::back()->with('success', 'Folio Cerrado Correctamente');
             } else {
@@ -158,7 +165,7 @@ class ConsultaExternaController extends Controller
             $id_evento = COL_EVENTO::getIdEvento($accion);
 
             $hostname = gethostbyaddr($_SERVER['REMOTE_ADDR']);
-            $macAddress = HelperController::obtenerMacEquipo();
+            // $macAddress = HelperController::obtenerMacEquipo();
             $ipCliente = $_SERVER['REMOTE_ADDR'];
 
             // Ejecuta la consulta SQL para actualizar el registro
@@ -171,7 +178,7 @@ class ConsultaExternaController extends Controller
             if ($affectedRows1 > 0) {
                 // Actualización exitosa
                 $sqlLog = " INSERT INTO COL_LOG ([FOR_ID],[USUARIO_ID], [EVE_ID], [LOG_DATO_INFO], [LOG_VLR_ANTERIOR], [LOG_VLR_NUEVO], [LOG_OBSERVACIONES], [LOG_FEC_HORA], [LOG_NOMBRE_EQUIPO], [LOG_IP_EQUIPO], [LOG_MAC_EQUIPO]) 
-                VALUES ('$id_formulario','$id_usuario', '$id_evento', 'NUMERO_CITA-$numero_cita', 'CitEstP-$valor_cita_antes', 'CitEstP-$actualizar_estado_cita', '$observacion', GETDATE(), '$hostname', '$ipCliente', '$macAddress')";
+                VALUES ('$id_formulario','$id_usuario', '$id_evento', 'NUMERO_CITA-$numero_cita', 'CitEstP-$valor_cita_antes', 'CitEstP-$actualizar_estado_cita', '$observacion', GETDATE(), '$hostname', '$ipCliente')";
                 $Log = DB::connection('sqlsrv')->insert($sqlLog);
                 return Redirect::back()->with('success', 'Cambio de estado exitoso');
             } else {
