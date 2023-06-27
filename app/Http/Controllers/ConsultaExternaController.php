@@ -93,7 +93,7 @@ class ConsultaExternaController extends Controller
             if ($affectedRows > 0) {
                 // Actualización exitosa
 
-                $sqlLog = " INSERT INTO COL_LOG ([FOR_ID],[USUARIO_ID], [EVE_ID], [LOG_DATO_INFO], [LOG_VLR_ANTERIOR], [LOG_VLR_NUEVO], [LOG_FEC_HORA], [LOG_NOMBRE_EQUIPO], [LOG_IP_EQUIPO], [LOG_MAC_EQUIPO]) 
+                $sqlLog = " INSERT INTO COL_LOG ([FOR_ID],[USUARIO_ID], [EVE_ID], [LOG_DATO_INFO], [LOG_VLR_ANTERIOR], [LOG_VLR_NUEVO], [LOG_FEC_HORA], [LOG_NOMBRE_EQUIPO], [LOG_IP_EQUIPO]) 
                 VALUES ('$id_formulario','$id_usuario', '$id_evento', 'TIPO_DOCUMENTO-$tipoDocumento/NUMERO_DOCUMENTO-$numeroDocumento', 'HISCCIE-0', 'HISCCIE-1', GETDATE(), '$hostname', '$ipCliente')";
                 $Log = DB::connection('sqlsrv')->insert($sqlLog);
                 return Redirect::back()->with('success', 'Folio Cerrado Correctamente');
@@ -177,7 +177,7 @@ class ConsultaExternaController extends Controller
             // Verifica si se actualizó algún registro
             if ($affectedRows1 > 0) {
                 // Actualización exitosa
-                $sqlLog = " INSERT INTO COL_LOG ([FOR_ID],[USUARIO_ID], [EVE_ID], [LOG_DATO_INFO], [LOG_VLR_ANTERIOR], [LOG_VLR_NUEVO], [LOG_OBSERVACIONES], [LOG_FEC_HORA], [LOG_NOMBRE_EQUIPO], [LOG_IP_EQUIPO], [LOG_MAC_EQUIPO]) 
+                $sqlLog = " INSERT INTO COL_LOG ([FOR_ID],[USUARIO_ID], [EVE_ID], [LOG_DATO_INFO], [LOG_VLR_ANTERIOR], [LOG_VLR_NUEVO], [LOG_OBSERVACIONES], [LOG_FEC_HORA], [LOG_NOMBRE_EQUIPO], [LOG_IP_EQUIPO]) 
                 VALUES ('$id_formulario','$id_usuario', '$id_evento', 'NUMERO_CITA-$numero_cita', 'CitEstP-$valor_cita_antes', 'CitEstP-$actualizar_estado_cita', '$observacion', GETDATE(), '$hostname', '$ipCliente')";
                 $Log = DB::connection('sqlsrv')->insert($sqlLog);
                 return Redirect::back()->with('success', 'Cambio de estado exitoso');

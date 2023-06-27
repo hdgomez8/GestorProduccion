@@ -13,7 +13,7 @@ class COL_FORMULARIO extends Model
     protected $table = 'dbo.COL_FORMULARIO';
     public $timestamps = false;
     protected $dateFormat = 'Y-d-m H:i:s';
-    protected $primaryKey = ['FOR_ID'];
+    protected $primaryKey = 'FOR_ID';
     //protected $dateFormat = 'Y-d-m H:i:s.u'; // o el formato que te sirva
 
     protected $fillable = [

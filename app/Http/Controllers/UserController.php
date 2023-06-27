@@ -17,6 +17,7 @@ class UserController extends Controller
     {
         abort_if(Gate::denies('user_index'), 403);
         $users = User::paginate(5);
+
         // $usuarios = Usuario::on('sqlsrv2')->paginate(10);
 
         // $nombreUsuarios = DB::connection('sqlsrv2')
@@ -30,6 +31,17 @@ class UserController extends Controller
         // $params_array = json_decode($json,true);
 
         // //validar datos
+
+        return view('users.index', compact('users'));
+    }
+
+    public function indexUsuarios()
+    {
+        $sql = "SELECT * from users";
+
+
+        $users = DB::connection('sqlsrv')->select($sql);
+        // dd($users);
 
         return view('users.index', compact('users'));
     }
@@ -80,8 +92,8 @@ class UserController extends Controller
     {
         // $user=User::findOrFail($id);
         $data = $request->only('name', 'username', 'email');
-        $password=$request->input('password');
-        if($password)
+        $password = $request->input('password');
+        if ($password)
             $data['password'] = bcrypt($password);
         // if(trim($request->password)=='')
         // {

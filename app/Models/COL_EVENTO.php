@@ -13,7 +13,7 @@ class COL_EVENTO extends Model
     protected $table = 'dbo.COL_EVENTO';
     public $timestamps = false;
     protected $dateFormat = 'Y-d-m H:i:s';
-    protected $primaryKey = ['EVE_ID'];
+    protected $primaryKey = 'EVE_ID';
     //protected $dateFormat = 'Y-d-m H:i:s.u'; // o el formato que te sirva
 
     protected $fillable = [

@@ -76,8 +76,7 @@ class Reportes extends Model
         $nombreCapita = $request->get('nombreCapita');
 
         $sql = "SELECT top 1
-        EMPRESA.EMPCDIPS AS PRESTADOR,
-        -- EMPRESA.EMPRAZSOC AS RAZON_SOCIAL,
+        '470010047601' AS PRESTADOR,
         'COMPAÑIA COLOMBIANA DE SALUD COLSALUD S.A.' AS RAZON_SOCIAL,
         'NI' AS TIPO_DOCUMENTO,
         '819002176' AS NIT,
@@ -98,6 +97,42 @@ class Reportes extends Model
         WHERE EMPRESA.EMPCOD = '01' AND MAEATE.MAESTF <> '1'
         AND (maeate.MATipDoc = 1) AND (maeate.FacFch >= '$fechaInicio'+' '+'00:00:00')
         AND (maeate.FacFch <= '$fechaFin'+' '+'23:59:59') AND (maeate.MPMeNi IN('$nombreCapita')) ORDER BY 2";
+
+        return $data1 = DB::connection('sqlsrv2')->select($sql);
+    }
+
+    // Archivo De Transacciones
+    public static function getSubsidiadoAfConFacturas(Request $request)
+    {
+        $fechaInicio = $request->get('fechaInicio');
+        $fechaFin = $request->get('fechaFin');
+        $numeroFactura = $request->get('numeroFactura');
+        $nombreCapita = $request->get('nombreCapita');
+
+        $sql = "SELECT dbo.desencriptar(MaUsuFac) AS USUARIO_FACTURA,
+            maeate.MPMeNi AS CODIGO_CONTRATO,
+            maeate.mpnfac AS ORDEN_SERVICIO,
+            EMPRESA.EMPCDIPS AS PRESTADOR,
+            'COMPAÑIA COLOMBIANA DE SALUD COLSALUD S.A.' AS RAZON_SOCIAL,
+            'NI' AS TIPO_DOCUMENTO,
+            '819002176' AS NIT,
+            '$numeroFactura' AS FACTURA,
+            '01/03/2022' AS FECHA_FACTURA,
+            '01/02/2022' AS FECHA_INICIO,
+            '28/02/2022' AS FECHA_FIN,
+            'ESS024' AS CODIGO_ENTIDAD,
+            'COOSALUD ENTIDAD PROMOTORA DE' AS NOMBRE_ENTIDAD,
+            'SMA2019A3A008' AS NUMERO_CONTRATO,
+            '' AS PLAN_BENEFICIO,
+            '0' AS NUMERO_POLIZA,
+            FORMAT(MAEATE.MAVAAB, '###############') AS COPAGO,
+            0 AS COMISION,
+            0 AS DESCUENTO,
+            'VLR CONTRATO' AS VLR_NETO_PAGAR 
+            from empresa,MAEATE 
+            WHERE EMPRESA.EMPCOD = '01' AND MAEATE.MAESTF <> '1'
+            AND (maeate.MATipDoc = 1) AND (maeate.FacFch >= '$fechaInicio'+' '+'00:00:00')
+            AND (maeate.FacFch <= '$fechaFin'+' '+'23:59:59') AND (maeate.MPMeNi IN('$nombreCapita')) ORDER BY 2";
 
         return $data1 = DB::connection('sqlsrv2')->select($sql);
     }
@@ -128,8 +163,7 @@ class Reportes extends Model
         CASE WHEN CAPBAS.MPESTPAC ='S' THEN '1' WHEN CAPBAS.MPESTPAC ='N' THEN '2' END AS ESTADO_SALIDA,
         MAEATE.MACAMU AS DX_CAUSA_MUERTE,
         CONVERT(VARCHAR(10),MAEATE.MAFCHE, 103) AS FECHA_EGRESO,
-        CONVERT(varchar(5), MAEATE.MAHORE, 108) AS HORA_EGRESO,
-        * 
+        CONVERT(varchar(5), MAEATE.MAHORE, 108) AS HORA_EGRESO
         FROM MAEATE,INGRESOS,CAPBAS
         WHERE MPMeNi IN('$nombreCapita') 
         AND (maeate.FacFch >= '$fechaInicio'+' '+'00:00:00') 
@@ -297,42 +331,6 @@ class Reportes extends Model
         return $data1 = DB::connection('sqlsrv2')->select($sql);
     }
 
-    // // Archivo De Urgencias
-    // public static function getSubsidiadoAu(Request $request)
-    // {
-    //     $fechaInicio = $request->get('fechaInicio');
-    //     $fechaFin = $request->get('fechaFin');
-    //     $numeroFactura = $request->get('numeroFactura');
-    //     $nombreCapita = $request->get('nombreCapita');
-
-    //     $sql = "SELECT distinct 
-    //     maeate2.prcodi AS CODIGO,
-    //     '$numeroFactura' AS FACTURA,
-    //     '470010047601' AS PRESTADOR,
-    //     maeate.mptdoc AS TIPO_DOCUMENTO,
-    //     maeate.mpcedu AS DOCUMENTO,
-    //     CONVERT(VARCHAR(10), maeate.FacFch, 103) as FEC_INGRESO,
-    //     ltrim(DATEPART(HOUR, ingresos.ingfehatu)) + ':' + ltrim(DATEPART(MINUTE, ingresos.ingfehatu)) AS HORA_INGRESO,
-    //     MAEATE.MPNUMA AS AUTORIZACION,
-    //     ingresos.INGCAUE as CAUSA_EXTERNA,
-    //     INGRESOS.INGSALDX as DX_PRINC_E,
-    //     INGRESOS.INGDXSAL1 AS DX_RELAC_S1,
-    //     INGRESOS.INGDXSAL2 AS DX_RELAC_S2,
-    //     INGRESOS.INGDXSAL3 AS DX_RELAC_S3,
-    //     INGRESOS.INGSOADTR AS DEST_USUARIO,
-    //     INGRESOS.IngEstSld AS ESTADO_SALIDA,
-    //     INGRESOS.IngCauM AS CAUSA_MUERTE,
-    //     CONVERT(VARCHAR(10), INGRESOS.IngFecEgr, 103) AS FEC_EGRESO,ltrim(DATEPART(HOUR, ingresos.IngFecEgr)) + ':' + ltrim(DATEPART(MINUTE, ingresos.IngFecEgr)) AS HOR_EGRESO
-    //     FROM MAEATE,INGRESOS,MAEATE2
-    //     WHERE MAEATE.MAESTF <> '1' and (maeate.MATipDoc = 1) AND (maeate.FacFch >= '$fechaInicio' +' '+'00:00:00')
-    //     AND ( maeate.FacFch <= '$fechaFin'+' '+'23:59:59') AND (maeate.MPMeNi IN('$nombreCapita'))
-    //     AND maeate.mactving = ingresos.ingcsc and maeate.mpnfac = ingresos.ingfac and maeate.mpcedu = ingresos.mpcedu
-    //     and maeate.mptdoc = ingresos.mptdoc AND maeate2.fcptpotrn = 'F' and maeate.mpnfac = maeate2.mpnfac and maeate.matipdoc = maeate2.matipdoc
-    //     and maeate2.MaEsAnuP = 'N' and (maeate2.prcodi in('890701','890702')) ORDER BY  maeate.mpcedu";
-
-    //     return $data1 = DB::connection('sqlsrv2')->select($sql);
-    // }
-
     // Archivo De Usuarios
     public static function getSubsidiadoUs(Request $request)
     {
@@ -395,7 +393,7 @@ class Reportes extends Model
         DATEDIFF(YEAR,CAPBAS.MPFchN,GETDATE()) AS EDAD,
         CONVERT(VARCHAR(10), MAEATE.MAFchI, 103) AS FECHA_INGRESO,
         CONVERT(VARCHAR(10), MAEATE.MAFchE, 103) AS FECHA_EGRESO,
-        MAEATE.MADI1S AS DX_EGRESO,
+        case when MADi1S ='' then MADi1I else MADi1S end AS DX_EGRESO,
         MAEDIA.DMNomb AS DIAGNOSTICO_DETALLE,
         MAEATE2.PRCODI AS CUPS,
         MAEPRO.PrNomb AS DETALLE_CODIGO,
@@ -410,7 +408,7 @@ class Reportes extends Model
         LEFT OUTER JOIN INGRESOS ON MAEATE.MaCtvIng = INGRESOS.IngCsc AND MAEATE.MPNFac = INGRESOS.IngFac
         AND MAEATE.MPCedu = INGRESOS.MPCedu AND MAEATE.MPTDoc = INGRESOS.MPTDoc 
         LEFT OUTER JOIN MAEPRO ON MAEATE2.PRCODI = MAEPRO.PRCODI
-        LEFT OUTER JOIN MAEDIA ON MAEATE.MADI1S = MAEDIA.DMCodi 
+        LEFT OUTER JOIN MAEDIA ON case when MADi1S ='' then MADi1I else MADi1S end = MAEDIA.DMCodi  
         WHERE MAEATE.MAESTF <> '1' and (MAEATE.MATipDoc = 1) AND (MAEATE.FacFch >= '$fechaInicio' +' '+'00:00:00')
         AND ( MAEATE.FacFch <= '$fechaFin' +' '+'23:59:59') AND (MAEATE.MPMeNi IN ('$nombreCapita')) AND (MAEATE2.MaEsAnuP = 'N')
         AND (MAEATE2.MATipP IN (1, 2, 3, 4, 5)) AND (MAEATE2.MPInte * MAEATE2.MaCanPr > 0) and maeate2.fcptpotrn = 'F'

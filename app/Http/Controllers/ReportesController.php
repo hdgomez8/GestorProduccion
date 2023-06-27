@@ -8,6 +8,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\SubsidiadoExport;
+use Illuminate\Support\Facades\Storage;
+use Symfony\Component\HttpFoundation\Response;
+use ZipArchive;
 
 class ReportesController extends Controller
 {
@@ -140,12 +143,12 @@ class ReportesController extends Controller
         WHERE";
         if ($fecha1 == "") {
             $sql .= " CONVERT(DATE, HCCOM1.HisFHorAt) >= CONVERT(DATE, GETDATE() - 7) ";
-        }else{
+        } else {
             $sql .= " HCCOM1.HisFHorAt >= '$fecha1 00:00:00'";
         }
         if ($fecha2 == "") {
             $sql .= " AND CONVERT(DATE, HCCOM1.HisFHorAt) <= CONVERT(DATE, GETDATE())";
-        }else{
+        } else {
             $sql .= "  AND HCCOM1.HisFHorAt >= '$fecha2 23:59:59'";
         }
         if ($estado != "NULL") {
@@ -198,7 +201,6 @@ class ReportesController extends Controller
         return view('reportes.cuidadoCritico.egresos', compact('documentos'));
     }
 
-
     public function subsidiadoAC(Request $request)
     {    /* AC   AC   AC   CONSULTAS   */
 
@@ -219,6 +221,7 @@ class ReportesController extends Controller
 
         $facturasAC = Reportes::getSubsidiadoAc($request);
         $facturasAF = Reportes::getSubsidiadoAf($request);
+        $facturasAFconFacturas = Reportes::getSubsidiadoAfConFacturas($request);
         $facturasAH = Reportes::getSubsidiadoAh($request);
         $facturasAM = Reportes::getSubsidiadoAm($request);
         $facturasAP = Reportes::getSubsidiadoAp($request);
@@ -264,9 +267,7 @@ class ReportesController extends Controller
                 $nombreCapita = 'SIN NOMBRE SELECCIONADO';
                 break;
         }
-        $nombreCapita .= '.xlsx';
 
-        // dd($facturasAH);
         $export = new SubsidiadoExport(
             $facturasAC,
             $facturasAF,
@@ -278,7 +279,412 @@ class ReportesController extends Controller
             $facturasMalla
         );
 
-        return Excel::download($export, $nombreCapita);
-        // return view('reportes.colsalud.coosalud.index', compact('facturas', 'nombreArchivo'));
+        $nombreCapita = str_replace(['/', '\\'], '-', $nombreCapita);
+        $excelFileName = $nombreCapita . ".xlsx";
+        $excelFilePathTemp = $excelFileName;
+
+        Excel::store($export, $excelFilePathTemp);
+
+        // $publicExcelFilePathTemp = 'reportes/colsalud/coosalud/subsidiado-AC/' . $excelFileName;
+        // Storage::disk('public')->put($publicExcelFilePathTemp, file_get_contents($excelFilePathTemp));
+
+        // Generar TXT file content
+        $txtContentAC = $this->generateTxtContentAC($facturasAC);
+        $txtContentAF = $this->generateTxtContentAF($facturasAF);
+        $txtContentAFconFacturas = $this->generateTxtContentAFconFacturas($facturasAFconFacturas);
+        $txtContentAH = $this->generateTxtContentAH($facturasAH);
+        $txtContentAM = $this->generateTxtContentAM($facturasAM);
+        $txtContentAP = $this->generateTxtContentAP($facturasAP);
+        $txtContentAT = $this->generateTxtContentAT($facturasAT);
+        $txtContentUS = $this->generateTxtContentUS($facturasUS);
+        $txtContentMalla = $this->generateTxtContentMalla($facturasMalla);
+
+        // Store TXT file content to temporary storage
+        $txtFilePathAC = storage_path("AC.txt");
+        file_put_contents($txtFilePathAC, $txtContentAC);
+        $txtFilePathAF = storage_path("AF.txt");
+        file_put_contents($txtFilePathAF, $txtContentAF);
+        $txtFilePathAFconFacturas = storage_path("Facturas.txt");
+        file_put_contents($txtFilePathAFconFacturas, $txtContentAFconFacturas);
+        $txtFilePathAH = storage_path("AH.txt");
+        file_put_contents($txtFilePathAH, $txtContentAH);
+        $txtFilePathAM = storage_path("AM.txt");
+        file_put_contents($txtFilePathAM, $txtContentAM);
+        $txtFilePathAP = storage_path("AP.txt");
+        file_put_contents($txtFilePathAP, $txtContentAP);
+        $txtFilePathAT = storage_path("AT.txt");
+        file_put_contents($txtFilePathAT, $txtContentAT);
+        $txtFilePathUS = storage_path("US.txt");
+        file_put_contents($txtFilePathUS, $txtContentUS);
+        $txtFilePathMalla = storage_path("Malla.txt");
+        file_put_contents($txtFilePathMalla, $txtContentMalla);
+
+        // Crear archivo ZIP
+        $zipFileName = $nombreCapita . '.zip';
+        $zipFilePath = storage_path($zipFileName);
+        $zip = new ZipArchive;
+        $zip->open($zipFilePath, ZipArchive::CREATE | ZipArchive::OVERWRITE);
+
+        // Agregar archivo de texto (TXT) al ZIP
+        $zip->addFile($txtFilePathAC, "AC.txt");
+        $zip->addFile($txtFilePathAF, "AF.txt");
+        $zip->addFile($txtFilePathAFconFacturas, "Facturas.txt");
+        $zip->addFile($txtFilePathAH, "AH.txt");
+        $zip->addFile($txtFilePathAM, "AM.txt");
+        $zip->addFile($txtFilePathAP, "AP.txt");
+        $zip->addFile($txtFilePathAT, "AT.txt");
+        $zip->addFile($txtFilePathUS, "US.txt");
+        $zip->addFile($txtFilePathMalla, "Malla.txt");
+
+        // Agregar archivo de Excel al ZIP
+        $zip->addFile('C:\laragon\www\clinicamc\storage\app\\' . $nombreCapita . '.xlsx', $nombreCapita . ".xlsx");
+
+        // Cerrar el archivo ZIP
+        $zip->close();
+
+        $archivoExcel = 'C:\laragon\www\clinicamc\storage\app\\' . $nombreCapita . '.xlsx';
+        // Eliminar el archivo Excel
+        unlink($archivoExcel);
+
+        // dd($zipFileName);
+        // Descargar el archivo ZIP
+        return response()->download($zipFilePath, $zipFileName, ['Content-Type' => 'application/zip'])->deleteFileAfterSend();
+    }
+
+    private function generateTxtContentAC($facturasAC)
+    {
+        // Generate the content for the TXT file based on the provided data
+        // Adjust this logic according to your specific requirements
+
+        $content = '';
+
+        // dd($facturasAC);
+        // Add content for facturasAC
+        foreach ($facturasAC as $factura) {
+            $CODIGO = trim($factura->CODIGO);
+            if ($CODIGO == '89020219') {
+                $CODIGO = '890202';
+            }
+            $CAUSA_EXTERNA = trim($factura->CAUSA_EXTERNA);
+            if ($CAUSA_EXTERNA == '0') {
+                $CAUSA_EXTERNA = '13';
+            }
+            $DX_PRINC = trim($factura->DX_PRINC);
+            if ($DX_PRINC == '') {
+                $DX_PRINC = 'R51X';
+            }
+
+            $content .= trim($factura->FACTURA) .
+                "," . trim($factura->PRESTADOR) .
+                "," . trim($factura->TIPO_DOCUMENTO) .
+                "," . trim($factura->DOCUMENTO) .
+                "," . trim($factura->FECHA_CITA) .
+                "," . trim($factura->AUTORIZACION) .
+                "," . trim($CODIGO) .
+                "," . trim($factura->FINALIDAD) .
+                "," . trim($CAUSA_EXTERNA) .
+                "," . trim($DX_PRINC) .
+                "," . trim($factura->DX_RELAC_1) .
+                "," . trim($factura->DX_RELAC_2) .
+                "," . trim($factura->DX_RELAC_3) .
+                "," . trim($factura->TIPO_DX) .
+                "," . trim($factura->VLR_CONSULTA) .
+                "," . trim($factura->ABONO) .
+                "," . trim($factura->NETO_PAGAR) .
+                "\n";
+            // Add more fields as needed
+        }
+
+        return $content;
+    }
+
+    private function generateTxtContentAF($facturasAF)
+    {
+        // Generate the content for the TXT file based on the provided data
+        // Adjust this logic according to your specific requirements
+
+        $content = '';
+
+        // dd($facturasAF);
+        // Add content for facturasAC
+        foreach ($facturasAF as $factura) {
+            $COPAGO = trim($factura->COPAGO);
+            if (empty($COPAGO)) {
+                $COPAGO = "0";
+            }
+            "," . trim($factura->COPAGO) .
+                $content .= trim($factura->PRESTADOR) .
+                "," . trim($factura->RAZON_SOCIAL) .
+                "," . trim($factura->TIPO_DOCUMENTO) .
+                "," . trim($factura->NIT) .
+                "," . trim($factura->FACTURA) .
+                "," . trim($factura->FECHA_FACTURA) .
+                "," . trim($factura->FECHA_INICIO) .
+                "," . trim($factura->FECHA_FIN) .
+                "," . trim($factura->CODIGO_ENTIDAD) .
+                "," . trim($factura->NOMBRE_ENTIDAD) .
+                "," . trim($factura->NUMERO_CONTRATO) .
+                "," . trim($factura->PLAN_BENEFICIO) .
+                "," . trim($factura->NUMERO_POLIZA) .
+                "," . trim($COPAGO) .
+                "," . trim($factura->COMISION) .
+                "," . trim($factura->DESCUENTO) .
+                "," . trim($factura->VLR_NETO_PAGAR) . "\n";
+            // Add more fields as needed
+        }
+
+        return $content;
+    }
+
+    private function generateTxtContentAFconFacturas($facturasAFconFacturas)
+    {
+        // Generate the content for the TXT file based on the provided data
+        // Adjust this logic according to your specific requirements
+
+        $content = '';
+
+        // dd($facturasAF);
+        // Add content for facturasAC
+        foreach ($facturasAFconFacturas as $factura) {
+            $content .= trim($factura->USUARIO_FACTURA) .
+                "," . trim($factura->CODIGO_CONTRATO) .
+                "," . trim($factura->ORDEN_SERVICIO) .
+                "," . trim($factura->PRESTADOR) .
+                "," . trim($factura->RAZON_SOCIAL) .
+                "," . trim($factura->TIPO_DOCUMENTO) .
+                "," . trim($factura->NIT) .
+                "," . trim($factura->FACTURA) .
+                "," . trim($factura->FECHA_FACTURA) .
+                "," . trim($factura->FECHA_INICIO) .
+                "," . trim($factura->FECHA_FIN) .
+                "," . trim($factura->CODIGO_ENTIDAD) .
+                "," . trim($factura->NOMBRE_ENTIDAD) .
+                "," . trim($factura->NUMERO_CONTRATO) .
+                "," . trim($factura->PLAN_BENEFICIO) .
+                "," . trim($factura->NUMERO_POLIZA) .
+                "," . trim($factura->COPAGO) .
+                "," . trim($factura->COMISION) .
+                "," . trim($factura->DESCUENTO) .
+                "," . trim($factura->VLR_NETO_PAGAR) . "\n";
+            // Add more fields as needed
+        }
+
+        return $content;
+    }
+
+    private function generateTxtContentAH($facturasAH)
+    {
+        // Generate the content for the TXT file based on the provided data
+        // Adjust this logic according to your specific requirements
+
+        $content = '';
+
+        // dd($facturasAH);
+        // Add content for facturasAC
+        foreach ($facturasAH as $factura) {
+            $DX_PRINC_E = trim($factura->DX_PRINC_E);
+            if ($DX_PRINC_E == '') {
+                $DX_PRINC_E = trim($factura->DX_PRINC_I);
+            }
+            $content .= trim($factura->FACTURA) .
+                "," . trim($factura->PRESTADOR) .
+                "," . trim($factura->TIPO_DOCUMENTO) .
+                "," . trim($factura->DOCUMENTO) .
+                "," . trim($factura->VIA_INGRESO) .
+                "," . trim($factura->FECHA_INGRESO) .
+                "," . trim($factura->HORA_ING) .
+                "," . trim($factura->AUTORIZACION) .
+                "," . trim($factura->CAUSA_EXTERNA) .
+                "," . trim($factura->DX_PRINC_I) .
+                "," . trim($DX_PRINC_E) .
+                "," . trim($factura->DX_RELAC_S1) .
+                "," . trim($factura->DX_RELAC_S2) .
+                "," . trim($factura->DX_RELAC_S3) .
+                "," . trim($factura->DX_COMPL) .
+                "," . trim($factura->ESTADO_SALIDA) .
+                "," . trim($factura->DX_CAUSA_MUERTE) .
+                "," . trim($factura->FECHA_EGRESO) .
+                "," . trim($factura->HORA_EGRESO) . "\n";
+            // Add more fields as needed
+        }
+
+        return $content;
+    }
+
+    private function generateTxtContentAM($facturasAM)
+    {
+        // Generate the content for the TXT file based on the provided data
+        // Adjust this logic according to your specific requirements
+
+        $content = '';
+
+        // dd($facturasAM);
+        // Add content for facturasAC
+        foreach ($facturasAM as $factura) {
+            $content .= trim($factura->FACTURA) .
+                "," . trim($factura->PRESTADOR) .
+                "," . trim($factura->TIPO_DOCUMENTO) .
+                "," . trim($factura->DOCUMENTO) .
+                "," . trim($factura->AUTORIZACION) .
+                "," . trim($factura->COD_MEDICAMENTO) .
+                "," . trim($factura->TIPO_MEDICAMENTO) .
+                "," . trim($factura->NOMBRE_GENERICO) .
+                "," . trim($factura->FORMA) .
+                "," . trim($factura->CONCENTRACION) .
+                "," . trim($factura->UNIDAD_MEDIDA) .
+                "," . trim($factura->CANTIDAD) .
+                "," . trim($factura->VALOR_UNITARIO) .
+                "," . trim($factura->VALOR_TOTAL) . "\n";
+            // Add more fields as needed
+        }
+
+        return $content;
+    }
+
+    private function generateTxtContentAP($facturasAP)
+    {
+        // Generate the content for the TXT file based on the provided data
+        // Adjust this logic according to your specific requirements
+
+        $content = '';
+
+        // dd($facturasAP);
+        // Add content for facturasAC
+        foreach ($facturasAP as $factura) {
+            $PERSONAL_ATIENDE = trim($factura->PERSONAL_ATIENDE);
+            if ($PERSONAL_ATIENDE == "0") {
+                $PERSONAL_ATIENDE = "";
+            }
+            $content .= trim($factura->FACTURA) .
+                "," . trim($factura->PRESTADOR) .
+                "," . trim($factura->TIPO_DOCUMENTO) .
+                "," . trim($factura->DOCUMENTO) .
+                "," . trim($factura->FECHA_PROCED) .
+                "," . trim($factura->AUTORIZACION) .
+                "," . trim($factura->COD_PROCEDIMIENTO) .
+                "," . trim($factura->AMBITO) .
+                "," . trim($factura->FINALIDAD) .
+                "," . trim($PERSONAL_ATIENDE) .
+                "," . trim($factura->DX_PRINCIPAL) .
+                "," . trim($factura->DX_RELACIONADO) .
+                "," . trim($factura->DX_COMPLICACION) .
+                "," . trim($factura->VIA_ACTO_QX) .
+                "," . trim($factura->VLR_PROCEDIMIENTO) . "\n";
+            // Add more fields as needed
+        }
+
+        return $content;
+    }
+
+    private function generateTxtContentAT($facturasAT)
+    {
+        // Generate the content for the TXT file based on the provided data
+        // Adjust this logic according to your specific requirements
+
+        $content = '';
+
+        //dd($facturasAT);
+        // Add content for facturasAC
+        foreach ($facturasAT as $factura) {
+            $content .= trim($factura->FACTURA) .
+                "," . trim($factura->PRESTADOR) .
+                "," . trim($factura->TIPO_DOCUMENTO) .
+                "," . trim($factura->DOCUMENTO) .
+                "," . trim($factura->AUTORIZACION) .
+                "," . trim($factura->TIPO_SERVICIO) .
+                "," . trim($factura->CODIGO) .
+                "," . trim($factura->NOMBRE_GENERICO) .
+                "," . trim($factura->CANTIDAD) .
+                "," . trim($factura->VALOR_UNITARIO) .
+                "," . trim($factura->VALOR_TOTAL)  . "\n";
+            // Add more fields as needed
+        }
+
+        return $content;
+    }
+
+    private function generateTxtContentUS($facturasUS)
+    {
+        // Generate the content for the TXT file based on the provided data
+        // Adjust this logic according to your specific requirements
+
+        $content = '';
+
+        //dd($facturasUS);
+        // Add content for facturasAC
+        foreach ($facturasUS as $factura) {
+            $content .= trim($factura->TIPO_DOCUMENTO) .
+                "," . trim($factura->DOCUMENTO) .
+                "," . trim($factura->CODIGO_ENTIDAD) .
+                "," . trim($factura->TIPO_USUARIO) .
+                "," . trim($factura->APELLIDO1) .
+                "," . trim($factura->APELLIDO2) .
+                "," . trim($factura->NOMBRE1) .
+                "," . trim($factura->NOMBRE2) .
+                "," . trim($factura->EDAD) .
+                "," . trim($factura->UN_MED_EDAD) .
+                "," . trim($factura->SEXO) .
+                "," . trim($factura->DEPARTAMENTO) .
+                "," . trim($factura->MUNICIPIO) .
+                "," . trim($factura->ZONA_RESI) . "\n";
+            // Add more fields as needed
+        }
+
+        return $content;
+    }
+
+    private function generateTxtContentMalla($facturasMalla)
+    {
+        // Generate the content for the TXT file based on the provided data
+        // Adjust this logic according to your specific requirements
+
+        $content = '';
+
+        // dd($facturasMalla);
+        // Add content for facturasAC
+        foreach ($facturasMalla as $factura) {
+            $segundo_apellido = trim($factura->SEGUNDO_APELLIDO);
+            if (empty($segundo_apellido)) {
+                $segundo_apellido = "0";
+            }
+            $segundo_nombre = trim($factura->SEGUNDO_NOMBRE);
+            if (empty($segundo_nombre)) {
+                $segundo_nombre = "0";
+            }
+            $CUPS = trim($factura->CUPS);
+
+            if ($CUPS == '89020219') {
+                $CUPS = '890202';
+            }
+            $content .=
+                // trim($factura->ORDEN_SERVICIO) .
+                trim($factura->FACTURA) .
+                // "," . trim($factura->CONTRATO) .
+                // "," . trim($factura->NOMBRE_CONTRATO) .
+                "," . trim($factura->NIT_IPS) .
+                "," . trim($factura->TIPO_ID) .
+                "," . trim($factura->IDENTIFICACION) .
+                "," . trim($factura->PRIMER_APELLIDO) .
+                "," . $segundo_apellido .
+                "," . trim($factura->PRIMER_NOMBRE) .
+                "," . $segundo_nombre .
+                "," . trim($factura->SEXO) .
+                "," . trim($factura->EDAD) .
+                "," . trim($factura->FECHA_INGRESO) .
+                "," . trim($factura->FECHA_EGRESO) .
+                "," . trim($factura->DX_EGRESO) .
+                "," . trim($factura->DIAGNOSTICO_DETALLE) .
+                "," . trim($CUPS) .
+                "," . trim($factura->DETALLE_CODIGO) .
+                "," . trim($factura->CANTIDAD) .
+                "," . trim($factura->VALOR_UNITARIO) .
+                "," . trim($factura->VALOR_TOTAL) .
+                "," . trim($factura->ABONO) .
+                "," . trim($factura->TOTAL_NETO) .
+                "," . trim("0") . "\n";
+            // Add more fields as needed
+        }
+
+        return $content;
     }
 }

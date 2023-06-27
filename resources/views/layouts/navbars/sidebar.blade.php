@@ -371,7 +371,7 @@
                         <b class="caret"></b>
                     </p>
                 </a>
-                <div class="collapse{{ $activePage == 'users' || $activePage == 'permissions' || $activePage == 'roles'  ? ' show' : '' }}" id="administraccion">
+                <div class="collapse{{  $activePage == 'logs' || $activePage == 'users' || $activePage == 'permissions' || $activePage == 'roles'  ? ' show' : '' }}" id="administraccion">
                     @can('user_index')
                     <ul class="nav">
                         <li class="nav-item{{ $activePage == 'users' ? ' active' : '' }}">
@@ -398,6 +398,14 @@
                             <a class="nav-link" href="{{ route('roles.index') }}">
                                 <i class="material-icons">location_ons</i>
                                 <p>{{ __('Roles') }}</p>
+                            </a>
+                        </li>
+                    </ul>
+                    <ul class="nav">
+                        <li class="nav-item{{ $activePage == 'logs' ? ' active' : '' }}">
+                            <a class="nav-link" href="{{ route('log.index') }}">
+                                <i class="material-icons">description</i>
+                                <p>{{ __('Auditoria') }}</p>
                             </a>
                         </li>
                     </ul>

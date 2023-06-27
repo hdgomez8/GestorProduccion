@@ -62,7 +62,7 @@ Route::group(['middleware' => 'auth'], function () {
     // Reportes Colsalud
     // Reporte Coosalud
     Route::get('/reportes/colsalud/coosalud/index', [App\Http\Controllers\ReportesController::class, 'index'])->name('coosalud.index');
-    
+
     // Reporte Interconsulta
     Route::get('/reportes/colsalud/interconsultas/index', [App\Http\Controllers\ReportesController::class, 'indexInterconsultas'])->name('interconsultas.index');
     Route::post('/reportes/colsalud/interconsultas/index', [App\Http\Controllers\ReportesController::class, 'buscarInterconsultas'])->name('interconsultas.buscar');
@@ -79,11 +79,14 @@ Route::group(['middleware' => 'auth'], function () {
     Route::get('/obtenerValorVariable', [App\Http\Controllers\ParametrizacionController::class, 'obtenerValorVariable'])->name('obtenerValorVariable');
     Route::post('/actualizarValorVariable', [App\Http\Controllers\ParametrizacionController::class, 'actualizarValorVariable'])->name('actualizarValorVariable');
 
+    //Logs Colsalud
+    Route::get('/logs', [App\Http\Controllers\LogAuditoriaController::class, 'indexLog'])->name('log.index');
+    
     // //Consulta Externa Colsalud
     Route::get('/citas_index', [App\Http\Controllers\ConsultaExternaController::class, 'citas_index'])->name('citas_index');
     Route::get('/folio_index', [App\Http\Controllers\ConsultaExternaController::class, 'folio_index'])->name('folio_index');
     Route::get('/filtroNumeroCita', [App\Http\Controllers\ConsultaExternaController::class, 'filtroNumeroCita'])->name('filtroNumeroCita');
     Route::post('/cerrar_folio', [App\Http\Controllers\ConsultaExternaController::class, 'cerrar_folio'])->name('cerrar_folio');
-    
+
     Route::post('/cambiar_estado_cita', [App\Http\Controllers\ConsultaExternaController::class, 'cambiar_estado_cita'])->name('cambiar_estado_cita');
 });
