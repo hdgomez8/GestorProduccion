@@ -8,11 +8,13 @@ use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithMultipleSheets;
 use Maatwebsite\Excel\Concerns\WithTitle;
 use Maatwebsite\Excel\Sheet;
+use App\Http\Controllers\HelperController;
 
 class SubsidiadoExport implements FromCollection, WithMultipleSheets
 {
     protected $facturasAC;
     protected $facturasAF;
+    protected $facturasAFconFacturas;
     protected $facturasAH;
     protected $facturasAM;
     protected $facturasAP;
@@ -23,6 +25,7 @@ class SubsidiadoExport implements FromCollection, WithMultipleSheets
     public function __construct(
         $facturasAC,
         $facturasAF,
+        $facturasAFconFacturas,
         $facturasAH,
         $facturasAM,
         $facturasAP,
@@ -32,6 +35,7 @@ class SubsidiadoExport implements FromCollection, WithMultipleSheets
     ) {
         $this->facturasAC = $facturasAC;
         $this->facturasAF = $facturasAF;
+        $this->facturasAFconFacturas = $facturasAFconFacturas;
         $this->facturasAH = $facturasAH;
         $this->facturasAM = $facturasAM;
         $this->facturasAP = $facturasAP;
@@ -45,6 +49,7 @@ class SubsidiadoExport implements FromCollection, WithMultipleSheets
         return new Collection([
             $this->facturasAC,
             $this->facturasAF,
+            $this->facturasAFconFacturas,
             $this->facturasAH,
             $this->facturasAM,
             $this->facturasAP,
@@ -96,6 +101,18 @@ class SubsidiadoExport implements FromCollection, WithMultipleSheets
 
                 // Add data to the collection
                 foreach ($this->facturasAC as $factura) {
+                    $CODIGO = trim($factura->CODIGO);
+                    if ($CODIGO == "89020219") {
+                        $CODIGO = "890202";
+                    }
+                    $CAUSA_EXTERNA = trim($factura->CAUSA_EXTERNA);
+                    if ($CAUSA_EXTERNA == "0") {
+                        $CAUSA_EXTERNA = "13";
+                    }
+                    $DX_PRINC = trim($factura->DX_PRINC);
+                    if ($DX_PRINC == "") {
+                        $DX_PRINC = "R51X";
+                    }
                     $data->push([
                         $factura->FACTURA,
                         $factura->PRESTADOR,
@@ -103,10 +120,10 @@ class SubsidiadoExport implements FromCollection, WithMultipleSheets
                         $factura->DOCUMENTO,
                         $factura->FECHA_CITA,
                         $factura->AUTORIZACION,
-                        $factura->CODIGO,
+                        $CODIGO,
                         $factura->FINALIDAD,
-                        $factura->CAUSA_EXTERNA,
-                        $factura->DX_PRINC,
+                        $CAUSA_EXTERNA,
+                        $DX_PRINC,
                         $factura->DX_RELAC_1,
                         $factura->DX_RELAC_2,
                         $factura->DX_RELAC_3,
@@ -194,6 +211,44 @@ class SubsidiadoExport implements FromCollection, WithMultipleSheets
             }
         };
 
+        // Add sheet for facturas AF Con Facturas
+        $sheets[] = new class($this->facturasAFconFacturas) implements FromCollection, WithTitle
+        {
+            protected $facturasAFconFacturas;
+
+            public function __construct($facturasAFconFacturas)
+            {
+                $this->facturasAFconFacturas = $facturasAFconFacturas;
+            }
+
+            public function collection()
+            {
+                $data = new Collection();
+
+                // Add headers to the collection
+                $data->push([
+                    'USUARIO_FACTURA',
+                    'ORDEN_SERVICIO',
+                    // Add any additional columns here
+                ]);
+
+                // Add data to the collection
+                foreach ($this->facturasAFconFacturas as $factura) {
+                    $data->push([
+                        $factura->USUARIO_FACTURA,
+                        $factura->ORDEN_SERVICIO,
+                        // Add any additional columns here
+                    ]);
+                }
+
+                return $data;
+            }
+            public function title(): string
+            {
+                return 'FACTURAS';
+            }
+        };
+
         // Add sheet for facturas AH
         $sheets[] = new class($this->facturasAH) implements FromCollection, WithTitle
         {
@@ -234,18 +289,30 @@ class SubsidiadoExport implements FromCollection, WithMultipleSheets
 
                 // Add data to the collection
                 foreach ($this->facturasAH as $factura) {
+                    $DX_PRINC_I = trim($factura->DX_PRINC_I);
+                    if ($DX_PRINC_I == "") {
+                        $DX_PRINC_I = "R51X";
+                    }
+                    $DX_PRINC_E = trim($factura->DX_PRINC_E);
+                    if ($DX_PRINC_E == "") {
+                        $DX_PRINC_E = $DX_PRINC_I;
+                    }
+                    $VIA_INGRESO = trim($factura->VIA_INGRESO);
+                    if ($VIA_INGRESO == "1" || $VIA_INGRESO == "2") {
+                        $VIA_INGRESO = "3";
+                    }
                     $data->push([
                         $factura->FACTURA,
                         $factura->PRESTADOR,
                         $factura->TIPO_DOCUMENTO,
                         $factura->DOCUMENTO,
-                        $factura->VIA_INGRESO,
+                        $VIA_INGRESO,
                         $factura->FECHA_INGRESO,
                         $factura->HORA_ING,
                         $factura->AUTORIZACION,
                         $factura->CAUSA_EXTERNA,
-                        $factura->DX_PRINC_I,
-                        $factura->DX_PRINC_E,
+                        $DX_PRINC_I,
+                        $DX_PRINC_E,
                         $factura->DX_RELAC_S1,
                         $factura->DX_RELAC_S2,
                         $factura->DX_RELAC_S3,
@@ -364,6 +431,10 @@ class SubsidiadoExport implements FromCollection, WithMultipleSheets
 
                 // Add data to the collection
                 foreach ($this->facturasAP as $factura) {
+
+                    $helperController = new HelperController();
+                    $CODIGO = $helperController->cambiarCUPS(trim($factura->COD_PROCEDIMIENTO));
+
                     $data->push([
                         $factura->FACTURA,
                         $factura->PRESTADOR,
@@ -371,7 +442,7 @@ class SubsidiadoExport implements FromCollection, WithMultipleSheets
                         $factura->DOCUMENTO,
                         $factura->FECHA_PROCED,
                         $factura->AUTORIZACION,
-                        $factura->COD_PROCEDIMIENTO,
+                        $CODIGO,
                         $factura->AMBITO,
                         $factura->FINALIDAD,
                         $factura->PERSONAL_ATIENDE,
@@ -424,6 +495,8 @@ class SubsidiadoExport implements FromCollection, WithMultipleSheets
 
                 // Add data to the collection
                 foreach ($this->facturasAT as $factura) {
+                    $helperController = new HelperController();
+                    $CODIGO = $helperController->cambiarCUPS(trim($factura->CODIGO));
                     $data->push([
                         $factura->FACTURA,
                         $factura->PRESTADOR,
@@ -431,7 +504,7 @@ class SubsidiadoExport implements FromCollection, WithMultipleSheets
                         $factura->DOCUMENTO,
                         $factura->AUTORIZACION,
                         $factura->TIPO_SERVICIO,
-                        $factura->CODIGO,
+                        $CODIGO,
                         $factura->NOMBRE_GENERICO,
                         $factura->CANTIDAD,
                         $factura->VALOR_UNITARIO,
@@ -483,6 +556,10 @@ class SubsidiadoExport implements FromCollection, WithMultipleSheets
 
                 // Add data to the collection
                 foreach ($this->facturasUS as $factura) {
+                    $EDAD = trim($factura->EDAD);
+                    if ($EDAD == "0") {
+                        $EDAD = "1";
+                    }
                     $data->push([
                         $factura->TIPO_DOCUMENTO,
                         $factura->DOCUMENTO,
@@ -492,7 +569,7 @@ class SubsidiadoExport implements FromCollection, WithMultipleSheets
                         $factura->APELLIDO2,
                         $factura->NOMBRE1,
                         $factura->NOMBRE2,
-                        $factura->EDAD,
+                        $EDAD,
                         $factura->UN_MED_EDAD,
                         $factura->SEXO,
                         $factura->DEPARTAMENTO,
@@ -548,11 +625,33 @@ class SubsidiadoExport implements FromCollection, WithMultipleSheets
                     'VALOR_TOTAL',
                     'ABONO',
                     'TOTAL_NETO',
+                    'TIPO',
                     // Add any additional columns here
                 ]);
 
                 // Add data to the collection
                 foreach ($this->facturasMalla as $factura) {
+
+                    $helperController = new HelperController();
+                    $CUPS = $helperController->cambiarCUPS(trim($factura->CUPS));
+
+                    $segundo_apellido = trim($factura->SEGUNDO_APELLIDO);
+                    if (empty($segundo_apellido)) {
+                        $segundo_apellido = "0";
+                    }
+                    $segundo_nombre = trim($factura->SEGUNDO_NOMBRE);
+                    if (empty($segundo_nombre)) {
+                        $segundo_nombre = "0";
+                    }
+                    $DX_EGRESO = trim($factura->DX_EGRESO);
+                    if (empty($DX_EGRESO)) {
+                        $DX_EGRESO = "Z000";
+                    }
+                    $DIAGNOSTICO_DETALLE = trim($factura->DIAGNOSTICO_DETALLE);
+                    if (empty($DIAGNOSTICO_DETALLE)) {
+                        $DIAGNOSTICO_DETALLE = "EXAMEN MEDICO GENERAL";
+                    }
+
                     $data->push([
                         $factura->ORDEN_SERVICIO,
                         $factura->FACTURA,
@@ -560,22 +659,23 @@ class SubsidiadoExport implements FromCollection, WithMultipleSheets
                         $factura->TIPO_ID,
                         $factura->IDENTIFICACION,
                         $factura->PRIMER_APELLIDO,
-                        $factura->SEGUNDO_APELLIDO,
+                        $segundo_apellido,
                         $factura->PRIMER_NOMBRE,
-                        $factura->SEGUNDO_NOMBRE,
+                        $segundo_nombre,
                         $factura->SEXO,
                         $factura->EDAD,
                         $factura->FECHA_INGRESO,
                         $factura->FECHA_EGRESO,
-                        $factura->DX_EGRESO,
-                        $factura->DIAGNOSTICO_DETALLE,
-                        $factura->CUPS,
+                        $DX_EGRESO,
+                        $DIAGNOSTICO_DETALLE,
+                        $CUPS,
                         $factura->DETALLE_CODIGO,
                         $factura->CANTIDAD,
                         $factura->VALOR_UNITARIO,
                         $factura->VALOR_TOTAL,
                         $factura->ABONO,
                         $factura->TOTAL_NETO,
+                        $factura->TIPO,
                         // Add any additional columns here
                     ]);
                 }

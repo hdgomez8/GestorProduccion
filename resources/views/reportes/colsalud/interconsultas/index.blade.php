@@ -42,6 +42,7 @@
                                             <option value="33">TRANSITORIO UCI ADULTOS</option>
                                             <option value="4">UCI NEONATAL</option>
                                             <option value="5">UCI PEDIATRICA</option>
+                                            <option value='1,2,3,15,23,24,25,27,28,29,30,31,32,34'>URGENCIAS</option>
                                         </select>
                                     </div>
                                     <div class="col-sm-3">

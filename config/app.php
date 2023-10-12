@@ -184,6 +184,7 @@ return [
 
         //libreria para generar archivos PDF
         //Barryvdh\DomPDF\ServiceProvider::class,
+        Webklex\PDFMerger\Providers\PDFMergerServiceProvider::class,
 
     ],
 
@@ -238,7 +239,7 @@ return [
         'View' => Illuminate\Support\Facades\View::class,
         
         'Form' => Collective\Html\FormFacade::class,
-
+        'PDFMerger' => Webklex\PDFMerger\Facades\PDFMergerFacade::class,
         'Excel' => Maatwebsite\Excel\Facades\Excel::class,
         // 'DataTables' => Yajra\DataTables\Facades\DataTables::class,
 

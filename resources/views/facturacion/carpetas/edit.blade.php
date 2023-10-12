@@ -144,6 +144,9 @@ $CscId = trim($carpeta->IngCsc); @endphp value="{{ $CscId ?? 'None' }}"
                                                 @can('facturacion_nombreDocumento_admisiones')
                                                     <option value="AUTORIZACION DE URGENCIA">AUTORIZACION DE URGENCIA</option>
                                                 @endcan
+                                                @can('facturacion_nombreDocumento_admisiones')
+                                                    <option value="AUTORIZACION NO PBS">AUTORIZACION NO PBS</option>
+                                                @endcan
                                                 @can('facturacion_nombreDocumento_facturacion_practicante')
                                                     <option value="CERTIFICADO DE ATENCION">CERTIFICADO DE ATENCION</option>
                                                 @endcan
@@ -212,6 +215,9 @@ $CscId = trim($carpeta->IngCsc); @endphp value="{{ $CscId ?? 'None' }}"
                                                 @endcan
                                                 @can('facturacion_nombreDocumento_facturacion')
                                                     <option value="OXIGENO">OXIGENO</option>
+                                                @endcan
+                                                @can('facturacion_nombreDocumento_admisiones')
+                                                    <option value="PLANEACION RADIOTERAPIA">PLANEACION RADIOTERAPIA</option>
                                                 @endcan
                                                 @can('facturacion_nombreDocumento_ambulatorio')
                                                     <option value="RECORD DE ANESTESIA">RECORD DE ANESTESIA</option>
@@ -274,6 +280,9 @@ $CscId = trim($carpeta->IngCsc); @endphp value="{{ $CscId ?? 'None' }}"
                                                 @can('facturacion_nombreDocumento_admisiones')
                                                     <option value="AUTORIZACION DE URGENCIA">AUTORIZACION DE URGENCIA</option>
                                                 @endcan
+                                                @can('facturacion_nombreDocumento_admisiones')
+                                                    <option value="AUTORIZACION NO PBS">AUTORIZACION NO PBS</option>
+                                                @endcan
                                                 @can('facturacion_nombreDocumento_facturacion_practicante')
                                                     <option value="CERTIFICADO DE ATENCION">CERTIFICADO DE ATENCION</option>
                                                 @endcan
@@ -342,6 +351,9 @@ $CscId = trim($carpeta->IngCsc); @endphp value="{{ $CscId ?? 'None' }}"
                                                 @endcan
                                                 @can('facturacion_nombreDocumento_facturacion')
                                                     <option value="OXIGENO">OXIGENO</option>
+                                                @endcan
+                                                @can('facturacion_nombreDocumento_admisiones')
+                                                    <option value="PLANEACION RADIOTERAPIA">PLANEACION RADIOTERAPIA</option>
                                                 @endcan
                                                 @can('facturacion_nombreDocumento_ambulatorio')
                                                     <option value="RECORD DE ANESTESIA">RECORD DE ANESTESIA</option>
@@ -409,6 +421,9 @@ $CscId = trim($carpeta->IngCsc); @endphp value="{{ $CscId ?? 'None' }}"
                                                 @can('facturacion_nombreDocumento_admisiones')
                                                     <option value="AUTORIZACION DE URGENCIA">AUTORIZACION DE URGENCIA</option>
                                                 @endcan
+                                                @can('facturacion_nombreDocumento_admisiones')
+                                                    <option value="AUTORIZACION NO PBS">AUTORIZACION NO PBS</option>
+                                                @endcan
                                                 @can('facturacion_nombreDocumento_facturacion_practicante')
                                                     <option value="CERTIFICADO DE ATENCION">CERTIFICADO DE ATENCION</option>
                                                 @endcan
@@ -477,6 +492,9 @@ $CscId = trim($carpeta->IngCsc); @endphp value="{{ $CscId ?? 'None' }}"
                                                 @endcan
                                                 @can('facturacion_nombreDocumento_facturacion')
                                                     <option value="OXIGENO">OXIGENO</option>
+                                                @endcan
+                                                @can('facturacion_nombreDocumento_admisiones')
+                                                    <option value="PLANEACION RADIOTERAPIA">PLANEACION RADIOTERAPIA</option>
                                                 @endcan
                                                 @can('facturacion_nombreDocumento_ambulatorio')
                                                     <option value="RECORD DE ANESTESIA">RECORD DE ANESTESIA</option>
@@ -540,6 +558,9 @@ $CscId = trim($carpeta->IngCsc); @endphp value="{{ $CscId ?? 'None' }}"
                                                 @can('facturacion_nombreDocumento_admisiones')
                                                     <option value="AUTORIZACION DE URGENCIA">AUTORIZACION DE URGENCIA</option>
                                                 @endcan
+                                                @can('facturacion_nombreDocumento_admisiones')
+                                                    <option value="AUTORIZACION NO PBS">AUTORIZACION NO PBS</option>
+                                                @endcan
                                                 @can('facturacion_nombreDocumento_ambulatorio')
                                                     <option value="CERTIFICADO DE ATENCION">CERTIFICADO DE ATENCION</option>
                                                 @endcan
@@ -608,6 +629,9 @@ $CscId = trim($carpeta->IngCsc); @endphp value="{{ $CscId ?? 'None' }}"
                                                 @endcan
                                                 @can('facturacion_nombreDocumento_facturacion')
                                                     <option value="OXIGENO">OXIGENO</option>
+                                                @endcan
+                                                @can('facturacion_nombreDocumento_admisiones')
+                                                    <option value="PLANEACION RADIOTERAPIA">PLANEACION RADIOTERAPIA</option>
                                                 @endcan
                                                 @can('facturacion_nombreDocumento_ambulatorio')
                                                     <option value="RECORD DE ANESTESIA">RECORD DE ANESTESIA</option>

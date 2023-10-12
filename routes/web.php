@@ -71,7 +71,7 @@ Route::group(['middleware' => 'auth'], function () {
     Route::post('/reportes/colsalud/coosalud/subsidiado-AC', [App\Http\Controllers\ReportesController::class, 'subsidiadoAC'])->name('reportes.subsidiadoAC');
     Route::post('/descargar-consultas', [App\Http\Controllers\ReportesController::class, 'descargarTodo'])->name('reportes.descargarTodo');
 
-    //Parametrizaciones Colslaud
+    //Parametrizaciones Colsalud
     Route::get('/parametrizacion/index', [App\Http\Controllers\ParametrizacionController::class, 'index'])->name('parametrizacion.index');
     Route::get('/filtro', [App\Http\Controllers\ParametrizacionController::class, 'filtro'])->name('filtro');
     Route::get('/filtroP', [App\Http\Controllers\ParametrizacionController::class, 'filtroP'])->name('filtroP');
@@ -81,7 +81,7 @@ Route::group(['middleware' => 'auth'], function () {
 
     //Logs Colsalud
     Route::get('/logs', [App\Http\Controllers\LogAuditoriaController::class, 'indexLog'])->name('log.index');
-    
+
     // //Consulta Externa Colsalud
     Route::get('/citas_index', [App\Http\Controllers\ConsultaExternaController::class, 'citas_index'])->name('citas_index');
     Route::get('/folio_index', [App\Http\Controllers\ConsultaExternaController::class, 'folio_index'])->name('folio_index');
@@ -89,4 +89,20 @@ Route::group(['middleware' => 'auth'], function () {
     Route::post('/cerrar_folio', [App\Http\Controllers\ConsultaExternaController::class, 'cerrar_folio'])->name('cerrar_folio');
 
     Route::post('/cambiar_estado_cita', [App\Http\Controllers\ConsultaExternaController::class, 'cambiar_estado_cita'])->name('cambiar_estado_cita');
+
+    // //Estado De La Aplicacion
+
+    Route::get('/app-status', function () {
+        $appStatus = [
+            'environment' => config('app.env'),
+            'version' => config('app.version', 'N/A'),
+            'database' => [
+                'connection' => DB::connection()->getDriverName(),
+                'status' => DB::connection()->getPdo() ? 'Connected' : 'Not Connected',
+            ],
+            // Agrega más detalles según sea necesario
+        ];
+
+        return response()->json($appStatus);
+    });
 });

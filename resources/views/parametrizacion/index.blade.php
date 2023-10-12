@@ -24,7 +24,7 @@
                                     <label for="nombreCapita">SELECCIONA</label>
                                     <select id="opciones" class="form-control">
                                         <option value="1">PROCEDIMIENTO</option>
-                                        <option value="2">SUMINISTRO</option>
+                                        <!-- <option value="2">SUMINISTRO</option> -->
                                     </select>
                                 </div>
                             </div>

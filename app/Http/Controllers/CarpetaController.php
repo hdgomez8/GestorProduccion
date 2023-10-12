@@ -10,7 +10,11 @@ use App\Models\Archivos;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\File;
 use Karriere\PdfMerge\PdfMerge;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\DB; // Assuming your model namespace is App\Models
+use Illuminate\Support\Facades\Log;
+use Illuminate\Database\QueryException;
+use Illuminate\Validation\ValidationException;
+use Webklex\PDFMerger\Facades\PDFMergerFacade as PDFMerger;
 
 class CarpetaController extends Controller
 {
@@ -20,9 +24,16 @@ class CarpetaController extends Controller
     //******************************************************************* */
     public function index()
     {
-        $carpetas = Ingreso::getIngresos();
+        try {
+            $carpetas = Ingreso::getIngresos();
 
-        return view('facturacion.carpetas.index', compact('carpetas'));
+            return view('facturacion.carpetas.index', compact('carpetas'));
+        } catch (\Exception $e) {
+            // Registrar la excepción en los logs
+            Log::error($e);
+            // Manejar la excepción aquí
+            return view('facturacion.error', ['error' => $e->getMessage()]);
+        }
     }
 
     //******************************************************************* */
@@ -77,44 +88,44 @@ class CarpetaController extends Controller
 
             $carpeta->save();
 
-             // Encontrar el ID del usuario Dueño del archivo
-             $idUsuario = DB::table('pacientes')
-             ->where('mptdoc', $tipoId)
-             ->where('mpcedu', $numeroId)
-             ->orderBy('id', 'desc')
-             ->value('id');
-    
-
-             // Encontrar la carpeta donde se encuentra el archivo
-             $Archivo = DB::table('pacientes')
-                 ->join('archivos', 'archivos.id_Paciente', '=', 'pacientes.id')
-                 ->select('pacientes.id', 'archivos.ruta')
-                 ->where('archivos.nombre_Archivo', '=', 'IDENTIFICACION.pdf')
-                 ->where('pacientes.mptdoc', 'like', '%' . $tipoId . '%')
-                 ->where('pacientes.mpcedu', 'like', '%' . $numeroId . '%')
-                 ->latest('pacientes.id')
-                 ->first();
+            // Encontrar el ID del usuario Dueño del archivo
+            $idUsuario = DB::table('pacientes')
+                ->where('mptdoc', $tipoId)
+                ->where('mpcedu', $numeroId)
+                ->orderBy('id', 'desc')
+                ->value('id');
 
 
-             if ($Archivo) {
-                 // Encontrar la ruta del archivo
-                 $rutaArchivo = $Archivo->ruta . '\\' . 'IDENTIFICACION.pdf';
+            // Encontrar la carpeta donde se encuentra el archivo
+            $Archivo = DB::table('pacientes')
+                ->join('archivos', 'archivos.id_Paciente', '=', 'pacientes.id')
+                ->select('pacientes.id', 'archivos.ruta')
+                ->where('archivos.nombre_Archivo', '=', 'IDENTIFICACION.pdf')
+                ->where('pacientes.mptdoc', 'like', '%' . $tipoId . '%')
+                ->where('pacientes.mpcedu', 'like', '%' . $numeroId . '%')
+                ->latest('pacientes.id')
+                ->first();
 
-                 // Copiar el archivo a la nueva carpeta
-                 $nombreArchivo = 'IDENTIFICACION.pdf';
-                 //dd($ruta);
-                 $rutaNueva = $ruta . '\\' . $nombreArchivo;
-                 copy($rutaArchivo, $rutaNueva);
 
-                 //  dd($ruta);
-                 $documento = new Archivos;
-                 $documento->usuario = auth()->user()->username;
-                 $documento->id_Paciente = $idUsuario;
-                 $documento->ruta = $ruta . '\\';
-                 $documento->fecha_Guardado = Carbon::now();
-                 $documento->nombre_Archivo = 'IDENTIFICACION.pdf';
-                 $documento->save();
-             }
+            if ($Archivo) {
+                // Encontrar la ruta del archivo
+                $rutaArchivo = $Archivo->ruta . '\\' . 'IDENTIFICACION.pdf';
+
+                // Copiar el archivo a la nueva carpeta
+                $nombreArchivo = 'IDENTIFICACION.pdf';
+                //dd($ruta);
+                $rutaNueva = $ruta . '\\' . $nombreArchivo;
+                copy($rutaArchivo, $rutaNueva);
+
+                //  dd($ruta);
+                $documento = new Archivos;
+                $documento->usuario = auth()->user()->username;
+                $documento->id_Paciente = $idUsuario;
+                $documento->ruta = $ruta . '\\';
+                $documento->fecha_Guardado = Carbon::now();
+                $documento->nombre_Archivo = 'IDENTIFICACION.pdf';
+                $documento->save();
+            }
 
 
             return redirect()->route('carpetas.index')->with('success', 'Usuario Creado Correctamente');
@@ -126,13 +137,23 @@ class CarpetaController extends Controller
     //******************************************************************* */
     public function show()
     {
-        $carpetas = Carpetas::orderBy("id", 'DESC')
-            ->paginate(15);
+        try {
+            $carpetas = Carpetas::orderBy("id", 'DESC')
+                ->paginate(15);
 
-        $archivos = Archivos::where("nombre_Archivo", "like", 1 . '%')
-            ->paginate(10);
+            $archivos = Archivos::where("nombre_Archivo", "like", 1 . '%')
+                ->paginate(10);
 
-        return view('facturacion.carpetas.show', compact('carpetas', 'archivos'));
+            return view('facturacion.carpetas.show', compact('carpetas', 'archivos'));
+        } catch (QueryException $qe) {
+            // Manejar excepciones de base de datos
+            Log::error($qe);
+            return view('facturacion.error', ['error' => 'Error en la base de datos']);
+        } catch (\Exception $e) {
+            // Otras excepciones generales
+            Log::error($e);
+            return view('facturacion.error', ['error' => $e->getMessage()]);
+        }
     }
 
     //******************************************************************* */
@@ -140,33 +161,41 @@ class CarpetaController extends Controller
     //******************************************************************* */
     public function buscarPacienteHosvital(Request $request)
     {
-        $validData = $request->validate([
-            'tipoDocumento' => 'required',
-            'numeroDocumento' => 'required'
-        ]);
+        try {
+            $validData = $request->validate([
+                'tipoDocumento' => 'required',
+                'numeroDocumento' => 'required'
+            ]);
+    
+            $tipoDocumento = trim($request->get('tipoDocumento'));
+            $numeroDocumento = trim($request->get('numeroDocumento'));
+            $contrato = trim($request->get('contrato'));
+    
+            $sql = "SELECT ingresos.MPTDoc,ingresos.MPCedu,capbas.MPNOMC,INGRESOS.IngFecAdm,ingresos.IngFac,INGRESOS.IngNit,MAEEMP.MENOMB, INGRESOS.IngCsc 
+            FROM INGRESOS 
+            join CAPBAS on ingresos.MPTDoc = capbas.MPTDoc and INGRESOS.MPCedu = CAPBAS.MPCedu
+            join MAEEMP on ingresos.IngNit = maeemp.MENNIT
+            WHERE INGRESOS.MPTDoc = '$tipoDocumento' AND INGRESOS.MPCedu = '$numeroDocumento' order by ingresos.IngFecAdm desc ";
+            $carpetas = DB::connection('sqlsrv2')->select($sql);
+    
+            $contratos = Maeemp::where('MEestado', 0)
+                ->where('MEEmpcod', 1)
+                ->orderBy("MENOMB", 'asc')
+                ->get();
+    
+            $carpetass = Ingreso::where("INGRESOS.MPTDoc", "like", $tipoDocumento . '%')
+                ->where("INGRESOS.MPCedu", "like", $numeroDocumento . '%')
+                ->orderBy('INGRESOS.IngCsc', 'DESC')
+                ->paginate(30);
+    
+            return view('facturacion.carpetas.index', compact('carpetas', 'contratos', 'tipoDocumento', 'numeroDocumento'));
+        } catch (ValidationException $ve) {
+            return view('facturacion.error', ['error' => $ve->getMessage()]);
+        } catch (\Exception $e) {
+            Log::error($e);
+            return view('facturacion.error', ['error' => 'Ocurrió un error inesperado']);
+        }
 
-        $tipoDocumento = trim($request->get('tipoDocumento'));
-        $numeroDocumento = trim($request->get('numeroDocumento'));
-        $contrato = trim($request->get('contrato'));
-
-        $sql = "SELECT ingresos.MPTDoc,ingresos.MPCedu,capbas.MPNOMC,INGRESOS.IngFecAdm,ingresos.IngFac,INGRESOS.IngNit,MAEEMP.MENOMB, INGRESOS.IngCsc 
-        FROM INGRESOS 
-        join CAPBAS on ingresos.MPTDoc = capbas.MPTDoc and INGRESOS.MPCedu = CAPBAS.MPCedu
-        join MAEEMP on ingresos.IngNit = maeemp.MENNIT
-        WHERE INGRESOS.MPTDoc = '$tipoDocumento' AND INGRESOS.MPCedu = '$numeroDocumento' order by ingresos.IngFecAdm desc ";
-        $carpetas = DB::connection('sqlsrv2')->select($sql);
-
-        $contratos = Maeemp::where('MEestado', 0)
-            ->where('MEEmpcod', 1)
-            ->orderBy("MENOMB", 'asc')
-            ->get();
-
-        $carpetass = Ingreso::where("INGRESOS.MPTDoc", "like", $tipoDocumento . '%')
-            ->where("INGRESOS.MPCedu", "like", $numeroDocumento . '%')
-            ->orderBy('INGRESOS.IngCsc', 'DESC')
-            ->paginate(30);
-
-        return view('facturacion.carpetas.index', compact('carpetas', 'contratos', 'tipoDocumento', 'numeroDocumento'));
     }
 
     //******************************************************************* */
@@ -218,11 +247,35 @@ class CarpetaController extends Controller
     //******************************************************************* */
     public function DescargarFacturaPaciente($id)
     {
-        //dd($id);
-        $archivos = Archivos::where("id", $id)->firstOrFail();
-        $pathToFile = ($archivos->ruta . $archivos->nombre_Archivo);
-        //dd($archivos->nombre_Archivo);
-        return response()->download($pathToFile);
+        // // //dd($id);
+        //  $archivos = Archivos::where("id", $id)->firstOrFail();
+        //  $pathToFile = ($archivos->ruta . $archivos->nombre_Archivo);
+        // // //dd($archivos->nombre_Archivo);
+        //  return response()->download($pathToFile);
+
+        try {
+            $archivos = Archivos::where("id", $id)->firstOrFail();
+            $pathToFile = ($archivos->ruta . $archivos->nombre_Archivo);
+
+            return response()->download($pathToFile);
+        } catch (\Exception $e) {
+            // Manejo de la excepción
+            return back()->withError("No se pudo descargar el archivo. Error: " . $e->getMessage());
+        }
+
+        // $archivo = Archivos::find($id);
+
+        // if (!$archivo) {
+        //     abort(404, 'Archivo no encontrado.');
+        // }
+
+        // $pathToFile = public_path($archivo->ruta . $archivo->nombre_Archivo);
+
+        // if (!is_readable($pathToFile)) {
+        //     throw new \Exception('El archivo no se puede leer.');
+        // }
+
+        // return Response::download($pathToFile, $archivo->nombre_Archivo);
     }
 
     //******************************************************************* */
@@ -230,24 +283,30 @@ class CarpetaController extends Controller
     //******************************************************************* */
     public function edit(Carpetas $carpeta)
     {
-        $tipoId = trim($carpeta->MPTDoc);
-        $numeroId = trim($carpeta->MPCEDU);
-        $eps = trim($carpeta->MENOMB);
-        $diaIngresoCarpeta = \Carbon\Carbon::createFromFormat('Y-m-d H:i:s', $carpeta->IngFecAdm)->toDateString();
-        $id = trim($carpeta->id);
+        try {
+            $tipoId = trim($carpeta->MPTDoc);
+            $numeroId = trim($carpeta->MPCEDU);
+            $eps = trim($carpeta->MENOMB);
+            $diaIngresoCarpeta = \Carbon\Carbon::createFromFormat('Y-m-d H:i:s', $carpeta->IngFecAdm)->toDateString();
+            $id = trim($carpeta->id);
+    
+            $ruta = public_path("Archivos\\$diaIngresoCarpeta\\$eps\\$tipoId$numeroId");
+            $ruta2 = "$diaIngresoCarpeta\\$eps\\$tipoId$numeroId";
+            $rutaArchivoSin = null;
+    
+            //$archivos = Archivos::get();
+    
+            $archivos = Archivos::where("id_Paciente", "like",  $id)
+                ->orderBy('nombre_Archivo', 'ASC')
+                ->paginate(100);
+    
+            // dd($carpeta);
+            return view('facturacion.carpetas.edit', compact('ruta2', 'carpeta', 'ruta', 'archivos', 'rutaArchivoSin'));
+        } catch (\Exception $e) {
+            // Manejar la excepción aquí
+            return view('facturacion.error', ['error' => $e->getMessage()]);
+        }
 
-        $ruta = public_path("Archivos\\$diaIngresoCarpeta\\$eps\\$tipoId$numeroId");
-        $ruta2 = "$diaIngresoCarpeta\\$eps\\$tipoId$numeroId";
-        $rutaArchivoSin = null;
-
-        //$archivos = Archivos::get();
-
-        $archivos = Archivos::where("id_Paciente", "like",  $id)
-            ->orderBy('nombre_Archivo', 'ASC')
-            ->paginate(60);
-
-        // dd($carpeta);
-        return view('facturacion.carpetas.edit', compact('ruta2', 'carpeta', 'ruta', 'archivos', 'rutaArchivoSin'));
     }
 
     //******************************************************************* */
@@ -288,33 +347,21 @@ class CarpetaController extends Controller
         $nombreDocumento4 = trim($request->get('nombreDocumento4'));
 
         // Detalles Del Documento Adjunto 1
-        $fileTmpPath1 = $_FILES['adjunto1']['tmp_name'];
-        $fileName1 = $_FILES['adjunto1']['name'];
-        $fileSize1 = $_FILES['adjunto1']['size'];
         $fileType1 = $_FILES['adjunto1']['type'];
         $fileNameCmps1 = explode("/", $fileType1);
         $fileExtension1 = strtolower(end($fileNameCmps1));
 
         // Detalles Del Documento Adjunto 2
-        $fileTmpPath2 = $_FILES['adjunto2']['tmp_name'];
-        $fileName2 = $_FILES['adjunto2']['name'];
-        $fileSize2 = $_FILES['adjunto2']['size'];
         $fileType2 = $_FILES['adjunto2']['type'];
         $fileNameCmps2 = explode("/", $fileType2);
         $fileExtension2 = strtolower(end($fileNameCmps2));
 
         // Detalles Del Documento Adjunto 3
-        $fileTmpPath3 = $_FILES['adjunto3']['tmp_name'];
-        $fileName3 = $_FILES['adjunto3']['name'];
-        $fileSize3 = $_FILES['adjunto3']['size'];
         $fileType3 = $_FILES['adjunto3']['type'];
         $fileNameCmps3 = explode("/", $fileType3);
         $fileExtension3 = strtolower(end($fileNameCmps3));
 
         // Detalles Del Documento Adjunto 4
-        $fileTmpPath4 = $_FILES['adjunto4']['tmp_name'];
-        $fileName4 = $_FILES['adjunto4']['name'];
-        $fileSize4 = $_FILES['adjunto4']['size'];
         $fileType4 = $_FILES['adjunto4']['type'];
         $fileNameCmps4 = explode("/", $fileType4);
         $fileExtension4 = strtolower(end($fileNameCmps4));
@@ -322,32 +369,24 @@ class CarpetaController extends Controller
         /**Verificamos si existe el directorio Adjunto 1*/
         $nombreCompletoDocumento1 = "$nombreDocumento1.$fileExtension1";
         $ruta1 = public_path("Archivos\\$diaIngresoCarpeta\\$eps\\$tipoId$numeroId\\");
-        $totalDocumentos1 = count(glob($ruta1 . '{*.pdf}', GLOB_BRACE));
-        $consecutivo1 = $totalDocumentos1 + 1;
         $rutaArchivo1 = public_path("Archivos\\$diaIngresoCarpeta\\$eps\\$tipoId$numeroId\\$nombreCompletoDocumento1");
         //dd($rutaArchivo);
 
         /**Verificamos si existe el directorio Adjunto 2*/
         $nombreCompletoDocumento2 = "$nombreDocumento2.$fileExtension2";
         $ruta2 = public_path("Archivos\\$diaIngresoCarpeta\\$eps\\$tipoId$numeroId\\");
-        $totalDocumentos2 = count(glob($ruta2 . '{*.pdf}', GLOB_BRACE));
-        $consecutivo2 = $totalDocumentos2 + 1;
         $rutaArchivo2 = public_path("Archivos\\$diaIngresoCarpeta\\$eps\\$tipoId$numeroId\\$nombreCompletoDocumento2");
         //dd($rutaArchivo);
 
         /**Verificamos si existe el directorio Adjunto 3*/
         $nombreCompletoDocumento3 = "$nombreDocumento3.$fileExtension3";
         $ruta3 = public_path("Archivos\\$diaIngresoCarpeta\\$eps\\$tipoId$numeroId\\");
-        $totalDocumentos3 = count(glob($ruta3 . '{*.pdf}', GLOB_BRACE));
-        $consecutivo3 = $totalDocumentos3 + 1;
         $rutaArchivo3 = public_path("Archivos\\$diaIngresoCarpeta\\$eps\\$tipoId$numeroId\\$nombreCompletoDocumento3");
         //dd($rutaArchivo);
 
         /**Verificamos si existe el directorio Adjunto 4*/
         $nombreCompletoDocumento4 = "$nombreDocumento4.$fileExtension4";
         $ruta4 = public_path("Archivos\\$diaIngresoCarpeta\\$eps\\$tipoId$numeroId\\");
-        $totalDocumentos4 = count(glob($ruta4 . '{*.pdf}', GLOB_BRACE));
-        $consecutivo4 = $totalDocumentos4 + 1;
         $rutaArchivo4 = public_path("Archivos\\$diaIngresoCarpeta\\$eps\\$tipoId$numeroId\\$nombreCompletoDocumento4");
         //dd($rutaArchivo);
 
@@ -1262,6 +1301,7 @@ class CarpetaController extends Controller
         $id = $request->id;
         $factura = $request->factura;
         $ruta = $request->ruta;
+        
 
         //dd($tabla);
         //$pdf = new PdfMerge();
